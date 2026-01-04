@@ -17,20 +17,34 @@ import { RouterLink, RouterView } from 'vue-router';
           </div>
         </RouterLink>
 
-        <nav class="flex gap-2">
+        <nav class="flex gap-1">
           <RouterLink
             to="/"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
             :class="$route.path === '/' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'"
           >
             Generate
           </RouterLink>
           <RouterLink
             to="/history"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
             :class="$route.path === '/history' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'"
           >
             History
+          </RouterLink>
+          <RouterLink
+            to="/queue"
+            class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+            :class="$route.path === '/queue' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'"
+          >
+            Queue
+          </RouterLink>
+          <RouterLink
+            to="/stats"
+            class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+            :class="$route.path === '/stats' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'"
+          >
+            Stats
           </RouterLink>
         </nav>
       </div>

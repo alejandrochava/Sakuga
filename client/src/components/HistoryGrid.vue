@@ -24,9 +24,11 @@ function formatDate(dateString) {
 
 function getTypeLabel(type) {
   const labels = {
-    'generate': 'Text to Image',
+    'generate': 'Generate',
     'edit': 'Edit',
-    'image-to-image': 'Transform'
+    'image-to-image': 'Transform',
+    'inpaint': 'Inpaint',
+    'upscale': 'Upscale'
   };
   return labels[type] || type;
 }
@@ -35,7 +37,9 @@ function getTypeColor(type) {
   const colors = {
     'generate': 'bg-green-500/20 text-green-400',
     'edit': 'bg-blue-500/20 text-blue-400',
-    'image-to-image': 'bg-purple-500/20 text-purple-400'
+    'image-to-image': 'bg-purple-500/20 text-purple-400',
+    'inpaint': 'bg-orange-500/20 text-orange-400',
+    'upscale': 'bg-cyan-500/20 text-cyan-400'
   };
   return colors[type] || 'bg-gray-500/20 text-gray-400';
 }
@@ -106,7 +110,11 @@ function downloadImage(item) {
       </div>
       <div class="p-3">
         <p class="text-sm text-gray-300 line-clamp-2 mb-2">{{ item.prompt }}</p>
-        <p class="text-xs text-gray-500">{{ formatDate(item.createdAt) }}</p>
+        <div class="flex items-center gap-2 text-xs text-gray-500">
+          <span>{{ formatDate(item.createdAt) }}</span>
+          <span v-if="item.provider" class="capitalize">{{ item.provider }}</span>
+          <span v-if="item.cost" class="text-green-400">${{ item.cost.toFixed(3) }}</span>
+        </div>
       </div>
     </div>
   </div>

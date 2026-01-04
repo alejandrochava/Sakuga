@@ -1,0 +1,98 @@
+<script setup>
+import { ref } from 'vue';
+
+const props = defineProps({
+  imageUrl: {
+    type: String,
+    required: true
+  }
+});
+
+const emit = defineEmits(['upscaled']);
+
+const isUpscaling = ref(false);
+const scale = ref(2);
+const showOptions = ref(false);
+
+async function upscale() {
+  isUpscaling.value = true;
+  showOptions.value = false;
+
+  try {
+    // Fetch the image and convert to blob
+    const imageResponse = await fetch(props.imageUrl);
+    const imageBlob = await imageResponse.blob();
+
+    const formData = new FormData();
+    formData.append('image', imageBlob, 'image.png');
+    formData.append('scale', scale.value.toString());
+    formData.append('provider', 'stability');
+
+    const response = await fetch('/api/upscale', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Upscale failed');
+    }
+
+    emit('upscaled', data);
+  } catch (error) {
+    console.error('Upscale error:', error);
+    alert(error.message);
+  } finally {
+    isUpscaling.value = false;
+  }
+}
+</script>
+
+<template>
+  <div class="relative">
+    <button
+      @click="showOptions = !showOptions"
+      :disabled="isUpscaling"
+      class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-white transition-colors flex items-center gap-1 disabled:opacity-50"
+    >
+      <svg v-if="!isUpscaling" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+      </svg>
+      <svg v-else class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+      </svg>
+      Upscale
+    </button>
+
+    <!-- Options Dropdown -->
+    <div
+      v-if="showOptions"
+      class="absolute bottom-full mb-2 left-0 bg-gray-800 border border-gray-700 rounded-lg p-3 shadow-xl z-10"
+    >
+      <div class="flex gap-2 mb-2">
+        <button
+          @click="scale = 2"
+          class="px-3 py-1 rounded text-sm transition-colors"
+          :class="scale === 2 ? 'bg-primary-500 text-white' : 'bg-gray-700 text-gray-300'"
+        >
+          2x
+        </button>
+        <button
+          @click="scale = 4"
+          class="px-3 py-1 rounded text-sm transition-colors"
+          :class="scale === 4 ? 'bg-primary-500 text-white' : 'bg-gray-700 text-gray-300'"
+        >
+          4x
+        </button>
+      </div>
+      <button
+        @click="upscale"
+        class="w-full px-3 py-1.5 bg-primary-500 hover:bg-primary-600 rounded text-sm text-white transition-colors"
+      >
+        Upscale {{ scale }}x
+      </button>
+    </div>
+  </div>
+</template>
