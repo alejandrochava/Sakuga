@@ -2,12 +2,22 @@ import * as openai from './openai.js';
 import * as stability from './stability.js';
 import * as replicate from './replicate.js';
 import * as gemini from './gemini.js';
+import * as ideogram from './ideogram.js';
+import * as fal from './fal.js';
+import * as together from './together.js';
+import * as bfl from './bfl.js';
+import * as a1111 from './a1111.js';
 
 const providers = {
   openai,
   stability,
   replicate,
-  gemini
+  gemini,
+  ideogram,
+  fal,
+  together,
+  bfl,
+  a1111
 };
 
 export function getProvider(name) {
@@ -58,6 +68,56 @@ export function getAvailableProviders() {
       models: ['gemini-2.0-flash-exp-image-generation'],
       features: ['generate', 'edit'],
       costPerImage: 0.02
+    });
+  }
+
+  if (process.env.IDEOGRAM_API_KEY) {
+    available.push({
+      id: 'ideogram',
+      name: 'Ideogram',
+      models: ['V_2', 'V_2_TURBO', 'V_1', 'V_1_TURBO'],
+      features: ['generate', 'variants'],
+      costPerImage: 0.08
+    });
+  }
+
+  if (process.env.FAL_KEY) {
+    available.push({
+      id: 'fal',
+      name: 'FAL.ai',
+      models: ['flux-pro', 'flux-dev', 'flux-schnell', 'flux-realism', 'sdxl'],
+      features: ['generate', 'edit', 'variants'],
+      costPerImage: 0.01
+    });
+  }
+
+  if (process.env.TOGETHER_API_KEY) {
+    available.push({
+      id: 'together',
+      name: 'Together AI',
+      models: ['flux-schnell', 'flux-dev'],
+      features: ['generate', 'variants'],
+      costPerImage: 0.003
+    });
+  }
+
+  if (process.env.BFL_API_KEY) {
+    available.push({
+      id: 'bfl',
+      name: 'Black Forest Labs',
+      models: ['flux-pro-1.1', 'flux-pro', 'flux-dev', 'flux-schnell'],
+      features: ['generate', 'variants'],
+      costPerImage: 0.025
+    });
+  }
+
+  if (process.env.A1111_URL) {
+    available.push({
+      id: 'a1111',
+      name: 'Automatic1111 (Local)',
+      models: ['loaded-model'],
+      features: ['generate', 'edit', 'inpaint', 'variants'],
+      costPerImage: 0
     });
   }
 

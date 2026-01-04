@@ -32,6 +32,11 @@ onMounted(fetchProviders);
         <p>STABILITY_API_KEY=sk-...</p>
         <p>REPLICATE_API_TOKEN=r8_...</p>
         <p>GEMINI_API_KEY=AIza...</p>
+        <p>IDEOGRAM_API_KEY=...</p>
+        <p>FAL_KEY=...</p>
+        <p>TOGETHER_API_KEY=...</p>
+        <p>BFL_API_KEY=...</p>
+        <p>A1111_URL=http://localhost:7860</p>
       </div>
 
       <div class="mt-4">
@@ -80,7 +85,7 @@ onMounted(fetchProviders);
           <p class="text-gray-400 text-sm mt-1">
             Paint over specific areas of an image to regenerate just those parts. Upload an image, draw a mask over the areas you want changed, then describe what should replace them.
           </p>
-          <p class="text-gray-500 text-xs mt-1">Available with: Stability AI</p>
+          <p class="text-gray-500 text-xs mt-1">Available with: Stability AI, Automatic1111</p>
         </div>
       </div>
     </section>
@@ -170,6 +175,46 @@ onMounted(fetchProviders);
             Gemini's experimental image generation. Note: Requires paid tier (no free quota for image generation).
           </p>
           <p class="text-gray-500 text-xs mt-1">~$0.02/image | Features: Generate, Edit</p>
+        </div>
+
+        <div>
+          <h3 class="text-primary-400 font-medium">Ideogram</h3>
+          <p class="text-gray-400 text-sm mt-1">
+            Excellent for generating images with text. Best-in-class text rendering in AI-generated images.
+          </p>
+          <p class="text-gray-500 text-xs mt-1">~$0.01-0.08/image | Features: Generate, Variants</p>
+        </div>
+
+        <div>
+          <h3 class="text-primary-400 font-medium">FAL.ai</h3>
+          <p class="text-gray-400 text-sm mt-1">
+            Fast and affordable access to Flux models and SDXL. Great for quick iterations and experiments.
+          </p>
+          <p class="text-gray-500 text-xs mt-1">~$0.003-0.05/image | Features: Generate, Edit, Variants</p>
+        </div>
+
+        <div>
+          <h3 class="text-primary-400 font-medium">Together AI</h3>
+          <p class="text-gray-400 text-sm mt-1">
+            Very affordable Flux model hosting. Flux Schnell Free tier available for testing.
+          </p>
+          <p class="text-gray-500 text-xs mt-1">~$0.003-0.018/image | Features: Generate, Variants</p>
+        </div>
+
+        <div>
+          <h3 class="text-primary-400 font-medium">Black Forest Labs</h3>
+          <p class="text-gray-400 text-sm mt-1">
+            Official Flux API from the creators of Flux. Highest quality Flux generations available.
+          </p>
+          <p class="text-gray-500 text-xs mt-1">~$0.003-0.06/image | Features: Generate, Variants</p>
+        </div>
+
+        <div>
+          <h3 class="text-primary-400 font-medium">Automatic1111 (Self-hosted)</h3>
+          <p class="text-gray-400 text-sm mt-1">
+            Connect to a local Stable Diffusion WebUI. Free to use, runs on your own hardware. Requires WebUI running with --api flag.
+          </p>
+          <p class="text-gray-500 text-xs mt-1">Free (local) | Features: Generate, Edit, Inpaint, Variants</p>
         </div>
       </div>
     </section>
