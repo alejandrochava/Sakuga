@@ -4,28 +4,148 @@
 
 @layer base {
   body {
-    @apply antialiased;
+    @apply antialiased bg-neu-dark text-text-primary;
   }
 }
 
 @layer components {
+  /* Neumorphic raised element */
+  .neu-raised {
+    @apply bg-neu-surface rounded-neu shadow-neu-raised transition-all duration-200;
+  }
+
+  .neu-raised-sm {
+    @apply bg-neu-surface rounded-neu-sm shadow-neu-raised-sm transition-all duration-200;
+  }
+
+  /* Neumorphic inset element */
+  .neu-inset {
+    @apply bg-neu-inset rounded-neu-sm shadow-neu-inset;
+  }
+
+  /* Buttons */
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
+    @apply px-5 py-2.5 rounded-neu-sm font-medium transition-all duration-200;
   }
 
   .btn-primary {
-    @apply bg-gradient-to-r from-primary-500 to-primary-700 text-white hover:from-primary-600 hover:to-primary-800 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-neu-surface text-accent shadow-neu-raised-sm;
+    @apply hover:shadow-neu-raised hover:text-accent;
+    @apply active:shadow-neu-inset-sm active:text-accent-dim;
+    @apply disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none;
   }
 
   .btn-secondary {
-    @apply bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-neu-surface text-text-secondary shadow-neu-raised-sm;
+    @apply hover:shadow-neu-raised hover:text-text-primary;
+    @apply active:shadow-neu-inset-sm;
+    @apply disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none;
   }
 
+  .btn-ghost {
+    @apply bg-transparent text-text-secondary;
+    @apply hover:bg-neu-surface hover:text-text-primary hover:shadow-neu-raised-sm;
+    @apply active:shadow-neu-inset-sm;
+  }
+
+  /* Input fields */
   .input {
-    @apply w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-colors;
+    @apply w-full px-4 py-3 bg-neu-inset rounded-neu-sm text-text-primary placeholder-text-muted;
+    @apply shadow-neu-inset border-none;
+    @apply focus:outline-none focus:shadow-accent-glow-sm focus:ring-1 focus:ring-accent/30;
+    @apply transition-all duration-200;
   }
 
+  /* Cards */
   .card {
-    @apply bg-gray-800 rounded-xl border border-gray-700;
+    @apply bg-neu-surface rounded-neu shadow-neu-raised border-none;
+  }
+
+  .card-sm {
+    @apply bg-neu-surface rounded-neu-sm shadow-neu-raised-sm border-none;
+  }
+
+  .card-inset {
+    @apply bg-neu-inset rounded-neu-sm shadow-neu-inset border-none;
+  }
+
+  /* Nav items */
+  .nav-item {
+    @apply px-4 py-2 rounded-neu-sm text-sm font-medium text-text-secondary transition-all duration-200;
+    @apply hover:text-text-primary hover:bg-neu-surface hover:shadow-neu-raised-sm;
+  }
+
+  .nav-item-active {
+    @apply px-4 py-2 rounded-neu-sm text-sm font-medium text-accent bg-neu-surface shadow-neu-inset-sm;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium;
+    @apply bg-neu-surface shadow-neu-raised-sm;
+  }
+
+  .badge-accent {
+    @apply badge text-accent;
+  }
+
+  /* Toggle switch */
+  .toggle-track {
+    @apply w-12 h-6 rounded-full bg-neu-inset shadow-neu-inset-sm transition-colors duration-200;
+  }
+
+  .toggle-track-active {
+    @apply bg-accent/20 shadow-accent-glow-sm;
+  }
+
+  .toggle-knob {
+    @apply w-5 h-5 rounded-full bg-neu-elevated shadow-neu-raised-sm transition-all duration-200;
+  }
+
+  .toggle-knob-active {
+    @apply bg-accent translate-x-6;
+  }
+
+  /* Accent glow effect */
+  .glow-accent {
+    @apply shadow-accent-glow;
+  }
+
+  /* Hover lift effect */
+  .hover-lift {
+    @apply transition-all duration-200;
+    @apply hover:shadow-neu-raised-lg hover:-translate-y-0.5;
+  }
+
+  /* Selection ring */
+  .ring-accent {
+    @apply ring-2 ring-accent/50 shadow-accent-glow-sm;
+  }
+}
+
+@layer utilities {
+  /* Scrollbar styling */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.neu.border') theme('colors.neu.dark');
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: theme('colors.neu.dark');
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: theme('colors.neu.border');
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: theme('colors.text.muted');
   }
 }

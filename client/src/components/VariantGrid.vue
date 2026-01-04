@@ -34,16 +34,16 @@ function downloadAll() {
 <template>
   <div v-if="images.length > 0" class="space-y-4">
     <!-- Main Preview -->
-    <div class="relative aspect-square bg-gray-800 rounded-lg overflow-hidden">
+    <div class="relative aspect-square neu-raised p-2 overflow-hidden">
       <img
         :src="images[selectedIndex]?.imageUrl"
         :alt="images[selectedIndex]?.prompt"
-        class="w-full h-full object-contain"
+        class="w-full h-full object-contain rounded-neu-sm"
       />
-      <div class="absolute bottom-3 right-3 flex gap-2">
+      <div class="absolute bottom-4 right-4 flex gap-2">
         <button
           @click="downloadImage(images[selectedIndex])"
-          class="px-3 py-1.5 bg-gray-900/80 hover:bg-gray-900 rounded-lg text-sm text-white transition-colors flex items-center gap-1"
+          class="px-3 py-1.5 bg-neu-surface shadow-neu-raised-sm hover:shadow-neu-raised rounded-neu-sm text-sm text-text-primary transition-all duration-200 flex items-center gap-1"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -59,8 +59,10 @@ function downloadAll() {
         v-for="(image, index) in images"
         :key="image.id"
         @click="selectImage(index)"
-        class="relative w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors"
-        :class="selectedIndex === index ? 'border-primary-500' : 'border-transparent hover:border-gray-600'"
+        class="relative w-20 h-20 rounded-neu-sm overflow-hidden transition-all duration-200"
+        :class="selectedIndex === index
+          ? 'shadow-neu-inset-sm ring-2 ring-accent/50'
+          : 'shadow-neu-raised-sm hover:shadow-neu-raised'"
       >
         <img
           :src="image.imageUrl"
@@ -69,7 +71,7 @@ function downloadAll() {
         />
         <div
           v-if="selectedIndex === index"
-          class="absolute inset-0 bg-primary-500/20"
+          class="absolute inset-0 bg-accent/10"
         ></div>
       </button>
     </div>
@@ -78,7 +80,7 @@ function downloadAll() {
     <div v-if="images.length > 1" class="flex justify-end">
       <button
         @click="downloadAll"
-        class="text-sm text-gray-400 hover:text-white transition-colors"
+        class="text-sm text-text-muted hover:text-accent transition-colors"
       >
         Download all variants
       </button>

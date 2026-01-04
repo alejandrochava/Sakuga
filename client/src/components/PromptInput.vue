@@ -38,7 +38,7 @@ function updateValue(event) {
     ></textarea>
     <div
       class="absolute bottom-3 right-3 text-xs"
-      :class="isNearLimit ? 'text-yellow-500' : 'text-gray-500'"
+      :class="isNearLimit ? 'text-yellow-500' : 'text-text-muted'"
     >
       {{ charCount }}/{{ maxLength }}
     </div>

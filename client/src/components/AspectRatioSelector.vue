@@ -27,13 +27,14 @@ function selectRatio(value) {
       v-for="ratio in ratios"
       :key="ratio.value"
       @click="selectRatio(ratio.value)"
-      class="flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors"
+      class="flex items-center gap-2 px-3 py-2 rounded-neu-sm transition-all duration-200"
       :class="modelValue === ratio.value
-        ? 'border-primary-500 bg-primary-500/10 text-primary-400'
-        : 'border-gray-700 text-gray-400 hover:border-gray-600'"
+        ? 'bg-neu-surface shadow-neu-inset-sm text-accent'
+        : 'bg-neu-surface shadow-neu-raised-sm text-text-secondary hover:shadow-neu-raised hover:text-text-primary'"
     >
       <div
-        class="border border-current flex-shrink-0"
+        class="border flex-shrink-0 transition-colors"
+        :class="modelValue === ratio.value ? 'border-accent' : 'border-current'"
         :style="{ width: ratio.width + 'px', height: ratio.height + 'px' }"
       ></div>
       <span class="text-sm">{{ ratio.label }}</span>

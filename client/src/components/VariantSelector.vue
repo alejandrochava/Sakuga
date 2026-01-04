@@ -18,17 +18,17 @@ function setCount(count) {
 </script>
 
 <template>
-  <div class="flex items-center gap-2">
-    <span class="text-sm text-gray-400">Variants:</span>
-    <div class="flex gap-1">
+  <div class="flex items-center gap-3">
+    <span class="text-sm text-text-secondary">Variants:</span>
+    <div class="flex gap-1.5">
       <button
         v-for="n in max"
         :key="n"
         @click="setCount(n)"
-        class="w-8 h-8 rounded flex items-center justify-center text-sm transition-colors"
+        class="w-9 h-9 rounded-neu-sm flex items-center justify-center text-sm font-medium transition-all duration-200"
         :class="modelValue === n
-          ? 'bg-primary-500 text-white'
-          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
+          ? 'bg-neu-surface shadow-neu-inset-sm text-accent'
+          : 'bg-neu-surface shadow-neu-raised-sm text-text-secondary hover:shadow-neu-raised hover:text-text-primary'"
       >
         {{ n }}
       </button>

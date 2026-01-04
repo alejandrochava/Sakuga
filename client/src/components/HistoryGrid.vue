@@ -35,13 +35,13 @@ function getTypeLabel(type) {
 
 function getTypeColor(type) {
   const colors = {
-    'generate': 'bg-green-500/20 text-green-400',
-    'edit': 'bg-blue-500/20 text-blue-400',
-    'image-to-image': 'bg-purple-500/20 text-purple-400',
-    'inpaint': 'bg-orange-500/20 text-orange-400',
-    'upscale': 'bg-cyan-500/20 text-cyan-400'
+    'generate': 'text-accent',
+    'edit': 'text-blue-400',
+    'image-to-image': 'text-purple-400',
+    'inpaint': 'text-orange-400',
+    'upscale': 'text-cyan-400'
   };
-  return colors[type] || 'bg-gray-500/20 text-gray-400';
+  return colors[type] || 'text-text-muted';
 }
 
 async function handleDelete(id) {
@@ -61,18 +61,18 @@ function downloadImage(item) {
 
 <template>
   <div v-if="items.length === 0" class="text-center py-16">
-    <svg class="w-16 h-16 mx-auto mb-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg class="w-16 h-16 mx-auto mb-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
     </svg>
-    <p class="text-gray-500">No generations yet</p>
-    <p class="text-gray-600 text-sm mt-1">Your generated images will appear here</p>
+    <p class="text-text-secondary">No generations yet</p>
+    <p class="text-text-muted text-sm mt-1">Your generated images will appear here</p>
   </div>
 
   <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
     <div
       v-for="item in items"
       :key="item.id"
-      class="card overflow-hidden group"
+      class="card overflow-hidden group hover-lift"
     >
       <div class="relative aspect-square">
         <img
@@ -83,7 +83,7 @@ function downloadImage(item) {
         <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
           <button
             @click="downloadImage(item)"
-            class="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors"
+            class="w-10 h-10 bg-neu-surface shadow-neu-raised-sm hover:shadow-neu-raised rounded-full flex items-center justify-center text-text-primary transition-all duration-200"
             title="Download"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,18 +102,18 @@ function downloadImage(item) {
           </button>
         </div>
         <span
-          class="absolute top-2 left-2 px-2 py-1 rounded text-xs font-medium"
+          class="absolute top-2 left-2 px-2.5 py-1 bg-neu-surface/90 shadow-neu-raised-sm rounded-full text-xs font-medium"
           :class="getTypeColor(item.type)"
         >
           {{ getTypeLabel(item.type) }}
         </span>
       </div>
       <div class="p-3">
-        <p class="text-sm text-gray-300 line-clamp-2 mb-2">{{ item.prompt }}</p>
-        <div class="flex items-center gap-2 text-xs text-gray-500">
+        <p class="text-sm text-text-secondary line-clamp-2 mb-2">{{ item.prompt }}</p>
+        <div class="flex items-center gap-2 text-xs text-text-muted">
           <span>{{ formatDate(item.createdAt) }}</span>
           <span v-if="item.provider" class="capitalize">{{ item.provider }}</span>
-          <span v-if="item.cost" class="text-green-400">${{ item.cost.toFixed(3) }}</span>
+          <span v-if="item.cost" class="text-accent">${{ item.cost.toFixed(3) }}</span>
         </div>
       </div>
     </div>

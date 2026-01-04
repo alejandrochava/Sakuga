@@ -14,38 +14,38 @@ function formatDate(dateString) {
 
 function getStatusColor(status) {
   const colors = {
-    pending: 'bg-yellow-500/20 text-yellow-400',
-    processing: 'bg-blue-500/20 text-blue-400',
-    completed: 'bg-green-500/20 text-green-400',
-    failed: 'bg-red-500/20 text-red-400'
+    pending: 'text-yellow-400',
+    processing: 'text-blue-400',
+    completed: 'text-accent',
+    failed: 'text-red-400'
   };
-  return colors[status] || 'bg-gray-500/20 text-gray-400';
+  return colors[status] || 'text-text-muted';
 }
 </script>
 
 <template>
-  <div v-if="jobs.length === 0" class="text-center py-8 text-gray-500">
+  <div v-if="jobs.length === 0" class="text-center py-8 text-text-muted">
     <p>No jobs in queue</p>
     <p class="text-sm mt-1">Add prompts to generate them in the background</p>
   </div>
 
-  <div v-else class="space-y-2">
+  <div v-else class="space-y-3">
     <div
       v-for="job in jobs"
       :key="job.id"
-      class="flex items-center gap-4 p-3 bg-gray-800 rounded-lg"
+      class="flex items-center gap-4 p-4 bg-neu-surface rounded-neu-sm shadow-neu-raised-sm"
     >
       <div class="flex-1 min-w-0">
-        <p class="text-sm text-white truncate">{{ job.prompt }}</p>
+        <p class="text-sm text-text-primary truncate">{{ job.prompt }}</p>
         <div class="flex items-center gap-2 mt-1">
-          <span class="text-xs text-gray-500">{{ job.provider }}</span>
-          <span class="text-xs text-gray-600">{{ formatDate(job.createdAt) }}</span>
-          <span v-if="job.count > 1" class="text-xs text-gray-500">{{ job.count }} variants</span>
+          <span class="text-xs text-text-muted">{{ job.provider }}</span>
+          <span class="text-xs text-text-muted">{{ formatDate(job.createdAt) }}</span>
+          <span v-if="job.count > 1" class="text-xs text-text-muted">{{ job.count }} variants</span>
         </div>
       </div>
 
       <span
-        class="px-2 py-0.5 rounded text-xs"
+        class="px-2.5 py-1 bg-neu-inset shadow-neu-inset-sm rounded-full text-xs font-medium"
         :class="getStatusColor(job.status)"
       >
         {{ job.status }}
@@ -54,7 +54,7 @@ function getStatusColor(status) {
       <button
         v-if="job.status === 'pending'"
         @click="emit('cancel', job.id)"
-        class="p-1 text-gray-500 hover:text-red-400 transition-colors"
+        class="p-2 text-text-muted hover:text-red-400 transition-colors"
         title="Cancel"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

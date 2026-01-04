@@ -228,7 +228,7 @@ function handleUpscaled(data) {
   <div class="max-w-4xl mx-auto">
     <!-- Provider Selection -->
     <div class="mb-6">
-      <label class="block text-sm font-medium text-gray-300 mb-2">AI Provider</label>
+      <label class="block text-sm font-medium text-text-secondary mb-2">AI Provider</label>
       <ProviderSelector
         v-model="provider"
         @provider-change="handleProviderChange"
@@ -241,15 +241,15 @@ function handleUpscaled(data) {
         v-for="m in modes"
         :key="m.value"
         @click="mode = m.value"
-        class="flex-1 min-w-[120px] p-3 rounded-lg border transition-all text-left"
+        class="flex-1 min-w-[120px] p-3 rounded-neu-sm transition-all text-left"
         :class="mode === m.value
-          ? 'border-primary-500 bg-primary-500/10'
-          : 'border-gray-700 hover:border-gray-600'"
+          ? 'bg-neu-surface shadow-neu-inset-sm'
+          : 'bg-neu-surface shadow-neu-raised-sm hover:shadow-neu-raised'"
       >
-        <p class="font-medium text-sm" :class="mode === m.value ? 'text-primary-400' : 'text-white'">
+        <p class="font-medium text-sm" :class="mode === m.value ? 'text-accent' : 'text-text-primary'">
           {{ m.label }}
         </p>
-        <p class="text-xs text-gray-500 mt-0.5">{{ m.description }}</p>
+        <p class="text-xs text-text-muted mt-0.5">{{ m.description }}</p>
       </button>
     </div>
 
@@ -257,10 +257,10 @@ function handleUpscaled(data) {
     <div class="card p-6 space-y-5">
       <!-- Prompt -->
       <div>
-        <label class="block text-sm font-medium text-gray-300 mb-2">Prompt</label>
+        <label class="block text-sm font-medium text-text-secondary mb-2">Prompt</label>
         <PromptInput v-model="prompt" />
-        <div v-if="enhancedPromptText" class="mt-2 p-2 bg-primary-500/10 border border-primary-500/30 rounded text-sm text-primary-300">
-          <span class="text-xs text-primary-400 block mb-1">Enhanced:</span>
+        <div v-if="enhancedPromptText" class="mt-2 p-3 bg-accent/10 rounded-neu-sm shadow-neu-inset-sm text-sm text-accent/80">
+          <span class="text-xs text-accent block mb-1">Enhanced:</span>
           {{ enhancedPromptText }}
         </div>
       </div>
@@ -270,13 +270,13 @@ function handleUpscaled(data) {
 
       <!-- Image Upload (for edit/transform/inpaint modes) -->
       <div v-if="mode !== 'generate'">
-        <label class="block text-sm font-medium text-gray-300 mb-2">Source Image</label>
+        <label class="block text-sm font-medium text-text-secondary mb-2">Source Image</label>
         <ImageUpload :model-value="selectedImage" @update:model-value="handleImageSelect" />
       </div>
 
       <!-- Mask Editor (for inpaint mode) -->
       <div v-if="mode === 'inpaint' && selectedImageUrl">
-        <label class="block text-sm font-medium text-gray-300 mb-2">Draw Mask</label>
+        <label class="block text-sm font-medium text-text-secondary mb-2">Draw Mask</label>
         <MaskEditor :image-src="selectedImageUrl" @mask-ready="handleMaskReady" />
       </div>
 
@@ -284,7 +284,7 @@ function handleUpscaled(data) {
       <div class="flex flex-wrap gap-4 items-center">
         <!-- Aspect Ratio (for generate mode) -->
         <div v-if="mode === 'generate'">
-          <label class="block text-sm font-medium text-gray-300 mb-2">Aspect Ratio</label>
+          <label class="block text-sm font-medium text-text-secondary mb-2">Aspect Ratio</label>
           <AspectRatioSelector v-model="aspectRatio" />
         </div>
 
@@ -327,14 +327,14 @@ function handleUpscaled(data) {
     </div>
 
     <!-- Error State -->
-    <div v-if="error" class="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+    <div v-if="error" class="mt-6 p-4 bg-red-500/10 rounded-neu-sm shadow-neu-inset-sm">
       <p class="text-red-400 text-sm">{{ error }}</p>
     </div>
 
     <!-- Result -->
     <div v-if="result && result.images.length > 0" class="mt-6">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-white">Result</h2>
+        <h2 class="text-lg font-semibold text-text-primary">Result</h2>
         <CostBadge :cost="totalCost" size="lg" />
       </div>
 

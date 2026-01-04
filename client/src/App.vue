@@ -1,55 +1,52 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router';
+import { RouterLink, RouterView, useRoute } from 'vue-router';
+
+const route = useRoute();
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-900">
+  <div class="min-h-screen bg-neu-dark">
     <!-- Header -->
-    <header class="border-b border-gray-800">
+    <header class="border-b border-neu-border/30">
       <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-        <RouterLink to="/" class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center">
-            <span class="text-white font-bold text-lg">S</span>
+        <RouterLink to="/" class="flex items-center gap-3 group">
+          <div class="w-11 h-11 bg-neu-surface rounded-neu-sm shadow-neu-raised-sm flex items-center justify-center group-hover:shadow-neu-raised transition-all duration-200">
+            <span class="text-accent font-bold text-xl">S</span>
           </div>
           <div>
-            <h1 class="text-xl font-bold text-white">Sakuga</h1>
-            <p class="text-xs text-gray-500">作画</p>
+            <h1 class="text-xl font-bold text-text-primary">Sakuga</h1>
+            <p class="text-xs text-text-muted">&#20316;&#30011;</p>
           </div>
         </RouterLink>
 
-        <nav class="flex gap-1">
+        <nav class="flex gap-2">
           <RouterLink
             to="/"
-            class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-            :class="$route.path === '/' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'"
+            :class="route.path === '/' ? 'nav-item-active' : 'nav-item'"
           >
             Generate
           </RouterLink>
           <RouterLink
             to="/history"
-            class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-            :class="$route.path === '/history' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'"
+            :class="route.path === '/history' ? 'nav-item-active' : 'nav-item'"
           >
             History
           </RouterLink>
           <RouterLink
             to="/queue"
-            class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-            :class="$route.path === '/queue' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'"
+            :class="route.path === '/queue' ? 'nav-item-active' : 'nav-item'"
           >
             Queue
           </RouterLink>
           <RouterLink
             to="/stats"
-            class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-            :class="$route.path === '/stats' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'"
+            :class="route.path === '/stats' ? 'nav-item-active' : 'nav-item'"
           >
             Stats
           </RouterLink>
           <RouterLink
             to="/help"
-            class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-            :class="$route.path === '/help' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'"
+            :class="route.path === '/help' ? 'nav-item-active' : 'nav-item'"
           >
             Help
           </RouterLink>

@@ -26,7 +26,7 @@ function downloadImage() {
       <img
         :src="src"
         :alt="prompt"
-        class="w-full aspect-square object-contain bg-gray-900"
+        class="w-full aspect-square object-contain bg-neu-inset"
       />
       <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
         <button
@@ -40,8 +40,8 @@ function downloadImage() {
         </button>
       </div>
     </div>
-    <div v-if="prompt" class="p-4 border-t border-gray-700">
-      <p class="text-sm text-gray-400 line-clamp-2">{{ prompt }}</p>
+    <div v-if="prompt" class="p-4 border-t border-neu-border/30">
+      <p class="text-sm text-text-secondary line-clamp-2">{{ prompt }}</p>
     </div>
   </div>
 </template>

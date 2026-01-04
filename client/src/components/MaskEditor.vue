@@ -110,49 +110,53 @@ onMounted(initCanvas);
       <div class="flex gap-2">
         <button
           @click="tool = 'brush'"
-          class="px-3 py-1.5 rounded text-sm transition-colors"
-          :class="tool === 'brush' ? 'bg-primary-500 text-white' : 'bg-gray-700 text-gray-300'"
+          class="px-3 py-1.5 rounded-neu-sm text-sm transition-all duration-200"
+          :class="tool === 'brush'
+            ? 'bg-neu-inset shadow-neu-inset-sm text-accent'
+            : 'bg-neu-surface shadow-neu-raised-sm text-text-secondary hover:text-text-primary'"
         >
           Brush
         </button>
         <button
           @click="tool = 'eraser'"
-          class="px-3 py-1.5 rounded text-sm transition-colors"
-          :class="tool === 'eraser' ? 'bg-primary-500 text-white' : 'bg-gray-700 text-gray-300'"
+          class="px-3 py-1.5 rounded-neu-sm text-sm transition-all duration-200"
+          :class="tool === 'eraser'
+            ? 'bg-neu-inset shadow-neu-inset-sm text-accent'
+            : 'bg-neu-surface shadow-neu-raised-sm text-text-secondary hover:text-text-primary'"
         >
           Eraser
         </button>
       </div>
 
       <div class="flex items-center gap-2">
-        <span class="text-sm text-gray-400">Size:</span>
+        <span class="text-sm text-text-secondary">Size:</span>
         <input
           type="range"
           v-model="brushSize"
           min="5"
           max="100"
-          class="w-24 accent-primary-500"
+          class="w-24 accent-accent"
         />
-        <span class="text-sm text-gray-500 w-8">{{ brushSize }}</span>
+        <span class="text-sm text-text-muted w-8">{{ brushSize }}</span>
       </div>
 
       <button
         @click="clearMask"
-        class="px-3 py-1.5 bg-red-500/20 text-red-400 rounded text-sm hover:bg-red-500/30 transition-colors"
+        class="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-neu-sm text-sm hover:bg-red-500/30 transition-colors"
       >
         Clear Mask
       </button>
     </div>
 
     <!-- Canvas Container -->
-    <div class="relative bg-gray-800 rounded-lg overflow-hidden">
+    <div class="relative neu-raised p-2 overflow-hidden">
       <canvas
         ref="canvasRef"
-        class="w-full h-auto"
+        class="w-full h-auto rounded-neu-sm"
       />
       <canvas
         ref="maskCanvasRef"
-        class="absolute inset-0 w-full h-full cursor-crosshair"
+        class="absolute inset-2 w-[calc(100%-16px)] h-[calc(100%-16px)] cursor-crosshair rounded-neu-sm"
         style="opacity: 0.5; mix-blend-mode: screen;"
         @mousedown="startDrawing"
         @mousemove="draw"
@@ -161,7 +165,7 @@ onMounted(initCanvas);
       />
     </div>
 
-    <p class="text-xs text-gray-500">
+    <p class="text-xs text-text-muted">
       Paint over the areas you want to regenerate. White areas will be replaced.
     </p>
   </div>

@@ -41,8 +41,8 @@ onMounted(() => {
 <template>
   <div>
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-white">History</h1>
-      <p v-if="history.length > 0" class="text-gray-500 text-sm">
+      <h1 class="text-2xl font-bold text-text-primary">History</h1>
+      <p v-if="history.length > 0" class="text-text-muted text-sm">
         {{ history.length }} generation{{ history.length !== 1 ? 's' : '' }}
       </p>
     </div>
@@ -53,7 +53,7 @@ onMounted(() => {
     </div>
 
     <!-- Error -->
-    <div v-else-if="error" class="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+    <div v-else-if="error" class="p-4 bg-red-500/10 rounded-neu-sm shadow-neu-inset-sm">
       <p class="text-red-400 text-sm">{{ error }}</p>
     </div>
 
