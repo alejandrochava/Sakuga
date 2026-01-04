@@ -46,6 +46,13 @@ import { RouterLink, RouterView } from 'vue-router';
           >
             Stats
           </RouterLink>
+          <RouterLink
+            to="/help"
+            class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+            :class="$route.path === '/help' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'"
+          >
+            Help
+          </RouterLink>
         </nav>
       </div>
     </header>

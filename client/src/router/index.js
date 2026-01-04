@@ -3,6 +3,7 @@ import GenerateView from '../views/GenerateView.vue';
 import HistoryView from '../views/HistoryView.vue';
 import QueueView from '../views/QueueView.vue';
 import StatsView from '../views/StatsView.vue';
+import HelpView from '../views/HelpView.vue';
 
 const routes = [
   {
@@ -24,6 +25,11 @@ const routes = [
     path: '/stats',
     name: 'stats',
     component: StatsView
+  },
+  {
+    path: '/help',
+    name: 'help',
+    component: HelpView
   }
 ];
 
