@@ -35,6 +35,7 @@ export function getAvailableProviders() {
     available.push({
       id: 'openai',
       name: 'OpenAI DALL-E',
+      type: 'cloud',
       models: ['dall-e-3', 'dall-e-2'],
       features: ['generate', 'edit', 'variants'],
       advancedParams: [],
@@ -46,6 +47,7 @@ export function getAvailableProviders() {
     available.push({
       id: 'stability',
       name: 'Stability AI',
+      type: 'cloud',
       models: ['sd3-large', 'sd3-medium', 'sdxl-1.0'],
       features: ['generate', 'edit', 'inpaint', 'upscale', 'variants'],
       advancedParams: ['seed', 'negativePrompt'],
@@ -57,6 +59,7 @@ export function getAvailableProviders() {
     available.push({
       id: 'replicate',
       name: 'Replicate',
+      type: 'cloud',
       models: ['flux-pro', 'flux-schnell', 'sdxl'],
       features: ['generate', 'upscale', 'variants'],
       advancedParams: ['seed', 'steps'],
@@ -68,6 +71,7 @@ export function getAvailableProviders() {
     available.push({
       id: 'gemini',
       name: 'Google Gemini',
+      type: 'cloud',
       models: ['gemini-2.0-flash-exp-image-generation'],
       features: ['generate', 'edit'],
       advancedParams: [],
@@ -79,6 +83,7 @@ export function getAvailableProviders() {
     available.push({
       id: 'ideogram',
       name: 'Ideogram',
+      type: 'cloud',
       models: ['V_2', 'V_2_TURBO', 'V_1', 'V_1_TURBO'],
       features: ['generate', 'variants'],
       advancedParams: ['negativePrompt'],
@@ -90,6 +95,7 @@ export function getAvailableProviders() {
     available.push({
       id: 'fal',
       name: 'FAL.ai',
+      type: 'cloud',
       models: ['flux-pro', 'flux-dev', 'flux-schnell', 'flux-realism', 'sdxl'],
       features: ['generate', 'edit', 'variants'],
       advancedParams: ['seed', 'steps'],
@@ -101,6 +107,7 @@ export function getAvailableProviders() {
     available.push({
       id: 'together',
       name: 'Together AI',
+      type: 'cloud',
       models: ['flux-schnell', 'flux-dev'],
       features: ['generate', 'variants'],
       advancedParams: ['seed', 'steps'],
@@ -112,6 +119,7 @@ export function getAvailableProviders() {
     available.push({
       id: 'bfl',
       name: 'Black Forest Labs',
+      type: 'cloud',
       models: ['flux-pro-1.1', 'flux-pro', 'flux-dev', 'flux-schnell'],
       features: ['generate', 'variants'],
       advancedParams: ['seed', 'steps'],
@@ -122,7 +130,8 @@ export function getAvailableProviders() {
   if (process.env.A1111_URL) {
     available.push({
       id: 'a1111',
-      name: 'Automatic1111 (Local)',
+      name: 'Automatic1111',
+      type: 'local',
       models: ['loaded-model'],
       features: ['generate', 'edit', 'inpaint', 'variants'],
       advancedParams: ['seed', 'steps', 'cfgScale', 'negativePrompt', 'sampler'],

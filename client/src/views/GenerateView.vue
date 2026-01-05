@@ -312,15 +312,8 @@ function handleUpscaled(data) {
         </div>
       </div>
 
-      <!-- Advanced Parameters -->
-      <AdvancedParameters
-        v-if="mode === 'generate'"
-        :provider="provider"
-        v-model="advancedParams"
-      />
-
       <!-- Actions -->
-      <div class="flex gap-3 pt-2">
+      <div class="flex gap-3 pt-2 items-center">
         <button
           @click="handleSubmit"
           :disabled="!canSubmit || isLoading"
@@ -348,6 +341,13 @@ function handleUpscaled(data) {
         >
           Clear
         </button>
+
+        <!-- Advanced Parameters (floating button with popover) -->
+        <AdvancedParameters
+          v-if="mode === 'generate'"
+          :provider="provider"
+          v-model="advancedParams"
+        />
       </div>
     </div>
 

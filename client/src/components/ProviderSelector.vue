@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 
 const props = defineProps({
   modelValue: {
@@ -14,6 +14,15 @@ const providers = ref([]);
 const selectedProvider = ref(props.modelValue);
 const selectedModel = ref('');
 const loading = ref(true);
+
+// Group providers by type
+const cloudProviders = computed(() =>
+  providers.value.filter(p => p.type === 'cloud')
+);
+
+const localProviders = computed(() =>
+  providers.value.filter(p => p.type === 'local')
+);
 
 async function fetchProviders() {
   try {
@@ -89,20 +98,51 @@ onMounted(fetchProviders);
     No API keys configured. Add keys to your .env file.
   </div>
 
-  <div v-else class="space-y-3">
-    <!-- Provider Selection -->
-    <div class="flex flex-wrap gap-2">
-      <button
-        v-for="provider in providers"
-        :key="provider.id"
-        @click="selectProvider(provider.id)"
-        class="px-4 py-2 rounded-neu-sm text-sm font-medium transition-all duration-200"
-        :class="selectedProvider === provider.id
-          ? 'bg-neu-surface shadow-neu-inset-sm text-accent'
-          : 'bg-neu-surface shadow-neu-raised-sm text-text-secondary hover:shadow-neu-raised hover:text-text-primary'"
-      >
-        {{ provider.name }}
-      </button>
+  <div v-else class="space-y-4">
+    <!-- Cloud Providers Section -->
+    <div v-if="cloudProviders.length > 0">
+      <div class="flex items-center gap-2 mb-2">
+        <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+        </svg>
+        <span class="text-xs font-medium text-text-muted uppercase tracking-wide">Cloud</span>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="provider in cloudProviders"
+          :key="provider.id"
+          @click="selectProvider(provider.id)"
+          class="px-4 py-2 rounded-neu-sm text-sm font-medium transition-all duration-200"
+          :class="selectedProvider === provider.id
+            ? 'bg-neu-surface shadow-neu-inset-sm text-accent'
+            : 'bg-neu-surface shadow-neu-raised-sm text-text-secondary hover:shadow-neu-raised hover:text-text-primary'"
+        >
+          {{ provider.name }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Local Providers Section -->
+    <div v-if="localProviders.length > 0">
+      <div class="flex items-center gap-2 mb-2">
+        <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+        <span class="text-xs font-medium text-text-muted uppercase tracking-wide">Local</span>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="provider in localProviders"
+          :key="provider.id"
+          @click="selectProvider(provider.id)"
+          class="px-4 py-2 rounded-neu-sm text-sm font-medium transition-all duration-200"
+          :class="selectedProvider === provider.id
+            ? 'bg-neu-surface shadow-neu-inset-sm text-accent'
+            : 'bg-neu-surface shadow-neu-raised-sm text-text-secondary hover:shadow-neu-raised hover:text-text-primary'"
+        >
+          {{ provider.name }}
+        </button>
+      </div>
     </div>
 
     <!-- Model Selection (if provider has multiple models) -->
