@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import PromptInput from '../components/PromptInput.vue';
 import ImageUpload from '../components/ImageUpload.vue';
 import AspectRatioSelector from '../components/AspectRatioSelector.vue';
@@ -12,8 +13,10 @@ import UpscaleButton from '../components/UpscaleButton.vue';
 import CostBadge from '../components/CostBadge.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
 import AdvancedParameters from '../components/AdvancedParameters.vue';
+import PromptTemplates from '../components/PromptTemplates.vue';
 import { useToast } from '../composables/useToast';
 
+const route = useRoute();
 const toast = useToast();
 
 const prompt = ref('');
@@ -94,8 +97,44 @@ function handleImageSelect(file) {
   }
 }
 
+// Keyboard shortcuts
+function handleKeydown(event) {
+  // Ctrl/Cmd + Enter to generate
+  if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+    event.preventDefault();
+    if (canSubmit.value && !isLoading.value) {
+      handleSubmit();
+    }
+  }
+  // Escape to clear
+  if (event.key === 'Escape' && !isLoading.value) {
+    handleClear();
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown);
+
+  // Check for prompt in query params (from "Use Prompt" in history)
+  if (route.query.prompt) {
+    prompt.value = route.query.prompt;
+  }
+});
+
+// Watch for route changes to handle prompt query
+watch(() => route.query.prompt, (newPrompt) => {
+  if (newPrompt) {
+    prompt.value = newPrompt;
+  }
+});
+
+function handleTemplateSelect(templatePrompt) {
+  prompt.value = templatePrompt;
+}
+
 // Cleanup on unmount
 onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown);
   if (selectedImageUrl.value) {
     URL.revokeObjectURL(selectedImageUrl.value);
   }
@@ -275,7 +314,13 @@ function handleUpscaled(data) {
     <div class="card p-5 sm:p-6 lg:p-8 space-y-5">
       <!-- Prompt -->
       <div>
-        <label class="block text-sm font-medium text-text-secondary mb-2">Prompt</label>
+        <div class="flex items-center justify-between mb-2">
+          <label class="block text-sm font-medium text-text-secondary">Prompt</label>
+          <PromptTemplates
+            :current-prompt="prompt"
+            @select="handleTemplateSelect"
+          />
+        </div>
         <PromptInput v-model="prompt" />
         <div v-if="enhancedPromptText" class="mt-2 p-3 bg-accent/10 rounded-neu-sm shadow-neu-inset-sm text-sm text-accent/80">
           <span class="text-xs text-accent block mb-1">Enhanced:</span>

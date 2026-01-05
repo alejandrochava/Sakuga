@@ -418,6 +418,37 @@ router.delete('/queue/:id', async (req, res) => {
   }
 });
 
+// POST /api/queue/:id/retry - Retry a failed job
+router.post('/queue/:id/retry', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const queue = await readQueue();
+    const job = queue.find(j => j.id === id);
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    if (job.status !== 'failed') {
+      return res.status(400).json({ error: 'Can only retry failed jobs' });
+    }
+
+    // Reset job status
+    job.status = 'pending';
+    job.error = null;
+    job.retryCount = (job.retryCount || 0) + 1;
+    await writeQueue(queue);
+
+    // Trigger queue processing
+    processQueue();
+
+    res.json({ success: true, job });
+  } catch (error) {
+    console.error('Queue retry error:', error);
+    res.status(500).json({ error: 'Failed to retry job' });
+  }
+});
+
 // Background queue processor
 let isProcessing = false;
 
@@ -532,14 +563,58 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-// GET /api/history - Get generation history
+// GET /api/history - Get generation history with optional pagination
 router.get('/history', async (req, res) => {
   try {
     const history = await readHistory();
-    res.json(history);
+
+    // Support pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 0; // 0 = no limit (return all)
+    const offset = (page - 1) * limit;
+
+    if (limit > 0) {
+      const paginatedHistory = history.slice(offset, offset + limit);
+      res.json({
+        items: paginatedHistory,
+        pagination: {
+          page,
+          limit,
+          total: history.length,
+          totalPages: Math.ceil(history.length / limit),
+          hasMore: offset + paginatedHistory.length < history.length
+        }
+      });
+    } else {
+      res.json(history);
+    }
   } catch (error) {
     console.error('History error:', error);
     res.status(500).json({ error: 'Failed to fetch history' });
+  }
+});
+
+// DELETE /api/history - Clear all history
+router.delete('/history', async (req, res) => {
+  try {
+    const history = await readHistory();
+
+    // Delete all image files
+    for (const item of history) {
+      try {
+        await fs.unlink(join(IMAGES_PATH, `${item.id}.png`));
+      } catch {
+        // Continue even if file doesn't exist
+      }
+    }
+
+    // Clear history
+    await writeHistory([]);
+
+    res.json({ success: true, deleted: history.length });
+  } catch (error) {
+    console.error('Clear history error:', error);
+    res.status(500).json({ error: 'Failed to clear history' });
   }
 });
 

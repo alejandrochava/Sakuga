@@ -6,6 +6,7 @@ const HistoryView = () => import('../views/HistoryView.vue');
 const QueueView = () => import('../views/QueueView.vue');
 const StatsView = () => import('../views/StatsView.vue');
 const HelpView = () => import('../views/HelpView.vue');
+const SettingsView = () => import('../views/SettingsView.vue');
 
 const routes = [
   {
@@ -32,6 +33,11 @@ const routes = [
     path: '/help',
     name: 'help',
     component: HelpView
+  },
+  {
+    path: '/settings',
+    name: 'settings',
+    component: SettingsView
   }
 ];
 

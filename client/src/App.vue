@@ -16,6 +16,7 @@ const navItems = [
   { path: '/history', label: 'History' },
   { path: '/queue', label: 'Queue' },
   { path: '/stats', label: 'Stats' },
+  { path: '/settings', label: 'Settings' },
   { path: '/help', label: 'Help' }
 ];
 </script>
