@@ -7,6 +7,8 @@ const QueueView = () => import('../views/QueueView.vue');
 const StatsView = () => import('../views/StatsView.vue');
 const HelpView = () => import('../views/HelpView.vue');
 const SettingsView = () => import('../views/SettingsView.vue');
+const CollectionsView = () => import('../views/CollectionsView.vue');
+const LoginView = () => import('../views/LoginView.vue');
 
 const routes = [
   {
@@ -38,6 +40,16 @@ const routes = [
     path: '/settings',
     name: 'settings',
     component: SettingsView
+  },
+  {
+    path: '/collections',
+    name: 'collections',
+    component: CollectionsView
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: LoginView
   }
 ];
 

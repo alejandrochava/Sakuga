@@ -6,6 +6,7 @@ import { dirname, join } from 'path';
 import fs from 'fs/promises';
 import * as providers from '../services/providers/index.js';
 import { validateGenerate, validateEdit, validateInpaint, validateUpscale, validateQueue } from '../middleware/validate.js';
+import * as db from '../db/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -15,55 +16,22 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const STORAGE_PATH = join(__dirname, '../../storage');
 const IMAGES_PATH = join(STORAGE_PATH, 'images');
-const HISTORY_PATH = join(STORAGE_PATH, 'history.json');
-const QUEUE_PATH = join(STORAGE_PATH, 'queue.json');
 
-// Ensure storage directories exist
+// Ensure storage directories exist and migrate data
 async function ensureStorage() {
   try {
     await fs.mkdir(IMAGES_PATH, { recursive: true });
-    try {
-      await fs.access(HISTORY_PATH);
-    } catch {
-      await fs.writeFile(HISTORY_PATH, '[]');
-    }
-    try {
-      await fs.access(QUEUE_PATH);
-    } catch {
-      await fs.writeFile(QUEUE_PATH, '[]');
+
+    // Run migration from JSON if needed
+    const migrated = await db.migrateFromJSON();
+    if (migrated.history > 0 || migrated.queue > 0) {
+      console.log(`Migrated ${migrated.history} history items and ${migrated.queue} queue items to SQLite`);
     }
   } catch (error) {
     console.error('Error ensuring storage:', error);
   }
 }
 ensureStorage();
-
-// Helper to read/write history
-async function readHistory() {
-  try {
-    const data = await fs.readFile(HISTORY_PATH, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
-}
-
-async function writeHistory(history) {
-  await fs.writeFile(HISTORY_PATH, JSON.stringify(history, null, 2));
-}
-
-async function readQueue() {
-  try {
-    const data = await fs.readFile(QUEUE_PATH, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
-}
-
-async function writeQueue(queue) {
-  await fs.writeFile(QUEUE_PATH, JSON.stringify(queue, null, 2));
-}
 
 async function saveImage(imageData, id) {
   const buffer = Buffer.from(imageData, 'base64');
@@ -87,7 +55,6 @@ router.post('/generate', validateGenerate, async (req, res) => {
       model,
       aspectRatio,
       count = 1,
-      // Advanced parameters
       seed,
       steps,
       cfgScale,
@@ -104,7 +71,6 @@ router.post('/generate', validateGenerate, async (req, res) => {
       model,
       aspectRatio,
       count: Math.min(count, 4),
-      // Pass advanced parameters
       seed,
       steps,
       cfgScale,
@@ -118,7 +84,6 @@ router.post('/generate', validateGenerate, async (req, res) => {
 
     const variantGroup = count > 1 ? uuidv4() : null;
     const savedImages = [];
-    const history = await readHistory();
     const perImageCost = result.images.length > 0 ? result.cost / result.images.length : 0;
 
     for (const image of result.images) {
@@ -138,11 +103,9 @@ router.post('/generate', validateGenerate, async (req, res) => {
         createdAt: new Date().toISOString()
       };
 
-      history.unshift(historyEntry);
+      db.addHistory(historyEntry);
       savedImages.push(historyEntry);
     }
-
-    await writeHistory(history);
 
     res.json({
       success: true,
@@ -191,9 +154,7 @@ router.post('/edit', upload.single('image'), validateEdit, async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
-    const history = await readHistory();
-    history.unshift(historyEntry);
-    await writeHistory(history);
+    db.addHistory(historyEntry);
 
     res.json({ success: true, ...historyEntry });
   } catch (error) {
@@ -244,9 +205,7 @@ router.post('/inpaint', upload.fields([
       createdAt: new Date().toISOString()
     };
 
-    const history = await readHistory();
-    history.unshift(historyEntry);
-    await writeHistory(history);
+    db.addHistory(historyEntry);
 
     res.json({ success: true, ...historyEntry });
   } catch (error) {
@@ -291,9 +250,7 @@ router.post('/upscale', upload.single('image'), validateUpscale, async (req, res
       createdAt: new Date().toISOString()
     };
 
-    const history = await readHistory();
-    history.unshift(historyEntry);
-    await writeHistory(history);
+    db.addHistory(historyEntry);
 
     res.json({ success: true, ...historyEntry });
   } catch (error) {
@@ -311,7 +268,6 @@ router.post('/enhance-prompt', async (req, res) => {
       return res.status(400).json({ error: 'Prompt is required' });
     }
 
-    // Use OpenAI or Gemini for prompt enhancement
     let enhanced;
     if (provider === 'openai' && process.env.OPENAI_API_KEY) {
       const OpenAI = (await import('openai')).default;
@@ -351,7 +307,8 @@ router.post('/enhance-prompt', async (req, res) => {
   }
 });
 
-// Queue endpoints
+// ============ QUEUE ENDPOINTS ============
+
 // POST /api/queue - Add job to queue
 router.post('/queue', validateQueue, async (req, res) => {
   try {
@@ -372,11 +329,7 @@ router.post('/queue', validateQueue, async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
-    const queue = await readQueue();
-    queue.push(job);
-    await writeQueue(queue);
-
-    // Process queue in background
+    db.addQueue(job);
     processQueue();
 
     res.json({ success: true, job });
@@ -387,9 +340,9 @@ router.post('/queue', validateQueue, async (req, res) => {
 });
 
 // GET /api/queue - Get queue status
-router.get('/queue', async (req, res) => {
+router.get('/queue', (req, res) => {
   try {
-    const queue = await readQueue();
+    const queue = db.getQueue();
     res.json(queue);
   } catch (error) {
     console.error('Queue fetch error:', error);
@@ -398,18 +351,14 @@ router.get('/queue', async (req, res) => {
 });
 
 // DELETE /api/queue/:id - Cancel/remove job
-router.delete('/queue/:id', async (req, res) => {
+router.delete('/queue/:id', (req, res) => {
   try {
     const { id } = req.params;
-    const queue = await readQueue();
-    const index = queue.findIndex(job => job.id === id);
+    const result = db.deleteQueue(id);
 
-    if (index === -1) {
+    if (result.changes === 0) {
       return res.status(404).json({ error: 'Job not found' });
     }
-
-    queue.splice(index, 1);
-    await writeQueue(queue);
 
     res.json({ success: true });
   } catch (error) {
@@ -419,11 +368,10 @@ router.delete('/queue/:id', async (req, res) => {
 });
 
 // POST /api/queue/:id/retry - Retry a failed job
-router.post('/queue/:id/retry', async (req, res) => {
+router.post('/queue/:id/retry', (req, res) => {
   try {
     const { id } = req.params;
-    const queue = await readQueue();
-    const job = queue.find(j => j.id === id);
+    const job = db.getQueueById(id);
 
     if (!job) {
       return res.status(404).json({ error: 'Job not found' });
@@ -433,16 +381,15 @@ router.post('/queue/:id/retry', async (req, res) => {
       return res.status(400).json({ error: 'Can only retry failed jobs' });
     }
 
-    // Reset job status
-    job.status = 'pending';
-    job.error = null;
-    job.retryCount = (job.retryCount || 0) + 1;
-    await writeQueue(queue);
+    db.updateQueue(id, {
+      status: 'pending',
+      error: null,
+      retryCount: (job.retry_count || 0) + 1
+    });
 
-    // Trigger queue processing
     processQueue();
 
-    res.json({ success: true, job });
+    res.json({ success: true, job: db.getQueueById(id) });
   } catch (error) {
     console.error('Queue retry error:', error);
     res.status(500).json({ error: 'Failed to retry job' });
@@ -458,24 +405,21 @@ async function processQueue() {
 
   try {
     while (true) {
-      const queue = await readQueue();
+      const queue = db.getQueue();
       const pendingJob = queue.find(job => job.status === 'pending');
 
       if (!pendingJob) break;
 
-      // Mark as processing
-      pendingJob.status = 'processing';
-      await writeQueue(queue);
+      db.updateQueue(pendingJob.id, { status: 'processing' });
 
       try {
         const result = await providers.generate(pendingJob.provider, {
           prompt: pendingJob.prompt,
           model: pendingJob.model,
-          aspectRatio: pendingJob.aspectRatio,
+          aspectRatio: pendingJob.aspect_ratio,
           count: pendingJob.count
         });
 
-        const history = await readHistory();
         const variantGroup = pendingJob.count > 1 ? uuidv4() : null;
         const perImageCost = result.images.length > 0 ? result.cost / result.images.length : 0;
 
@@ -483,7 +427,7 @@ async function processQueue() {
           const id = uuidv4();
           const imageUrl = await saveImage(image.imageData, id);
 
-          history.unshift({
+          db.addHistory({
             id,
             prompt: pendingJob.prompt,
             type: 'generate',
@@ -491,29 +435,17 @@ async function processQueue() {
             imageUrl,
             cost: perImageCost,
             variantGroup,
-            fromQueue: true,
             createdAt: new Date().toISOString()
           });
         }
 
-        await writeHistory(history);
-
-        // Mark as completed and remove from queue
-        const updatedQueue = await readQueue();
-        const jobIndex = updatedQueue.findIndex(j => j.id === pendingJob.id);
-        if (jobIndex !== -1) {
-          updatedQueue.splice(jobIndex, 1);
-          await writeQueue(updatedQueue);
-        }
+        db.deleteQueue(pendingJob.id);
       } catch (error) {
         console.error('Queue job error:', error);
-        const updatedQueue = await readQueue();
-        const job = updatedQueue.find(j => j.id === pendingJob.id);
-        if (job) {
-          job.status = 'failed';
-          job.error = error.message;
-          await writeQueue(updatedQueue);
-        }
+        db.updateQueue(pendingJob.id, {
+          status: 'failed',
+          error: error.message
+        });
       }
     }
   } finally {
@@ -521,72 +453,73 @@ async function processQueue() {
   }
 }
 
-// GET /api/stats - Get usage statistics
-router.get('/stats', async (req, res) => {
+// ============ STATS ENDPOINT ============
+
+router.get('/stats', (req, res) => {
   try {
-    const history = await readHistory();
+    const stats = db.getStats();
 
-    const stats = {
-      totalGenerations: history.length,
-      totalCost: history.reduce((sum, h) => sum + (h.cost || 0), 0),
-      byProvider: {},
-      byType: {},
-      last7Days: 0,
-      last30Days: 0
-    };
-
-    const now = new Date();
-    const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
-    const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
-
-    for (const entry of history) {
-      // By provider
-      const provider = entry.provider || 'gemini';
-      stats.byProvider[provider] = stats.byProvider[provider] || { count: 0, cost: 0 };
-      stats.byProvider[provider].count++;
-      stats.byProvider[provider].cost += entry.cost || 0;
-
-      // By type
-      stats.byType[entry.type] = stats.byType[entry.type] || 0;
-      stats.byType[entry.type]++;
-
-      // Time-based
-      const entryDate = new Date(entry.createdAt);
-      if (entryDate >= sevenDaysAgo) stats.last7Days++;
-      if (entryDate >= thirtyDaysAgo) stats.last30Days++;
+    // Transform for frontend compatibility
+    const byProvider = {};
+    for (const p of stats.byProvider) {
+      byProvider[p.provider || 'unknown'] = { count: p.count, cost: p.cost };
     }
 
-    res.json(stats);
+    const byType = {};
+    for (const t of stats.byType) {
+      byType[t.type] = t.count;
+    }
+
+    // Calculate 7/30 day counts
+    const now = new Date();
+    const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    const last7Days = stats.recentCosts
+      .filter(r => r.date >= sevenDaysAgo)
+      .reduce((sum, r) => sum + r.count, 0);
+
+    const last30Days = stats.recentCosts
+      .filter(r => r.date >= thirtyDaysAgo)
+      .reduce((sum, r) => sum + r.count, 0);
+
+    res.json({
+      totalGenerations: stats.totalGenerations,
+      totalCost: stats.totalCost,
+      byProvider,
+      byType,
+      last7Days,
+      last30Days,
+      recentCosts: stats.recentCosts
+    });
   } catch (error) {
     console.error('Stats error:', error);
     res.status(500).json({ error: 'Failed to get stats' });
   }
 });
 
-// GET /api/history - Get generation history with optional pagination
-router.get('/history', async (req, res) => {
+// ============ HISTORY ENDPOINTS ============
+
+router.get('/history', (req, res) => {
   try {
-    const history = await readHistory();
+    const { page, limit, type, provider, search } = req.query;
 
-    // Support pagination
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 0; // 0 = no limit (return all)
-    const offset = (page - 1) * limit;
+    const result = db.getHistory({
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 0,
+      type: type || null,
+      provider: provider || null,
+      search: search || null
+    });
 
-    if (limit > 0) {
-      const paginatedHistory = history.slice(offset, offset + limit);
-      res.json({
-        items: paginatedHistory,
-        pagination: {
-          page,
-          limit,
-          total: history.length,
-          totalPages: Math.ceil(history.length / limit),
-          hasMore: offset + paginatedHistory.length < history.length
-        }
-      });
+    // Map database columns to frontend format
+    if (Array.isArray(result)) {
+      res.json(result.map(mapHistoryItem));
     } else {
-      res.json(history);
+      res.json({
+        items: result.items.map(mapHistoryItem),
+        pagination: result.pagination
+      });
     }
   } catch (error) {
     console.error('History error:', error);
@@ -594,57 +527,219 @@ router.get('/history', async (req, res) => {
   }
 });
 
-// DELETE /api/history - Clear all history
+function mapHistoryItem(item) {
+  return {
+    id: item.id,
+    prompt: item.prompt,
+    type: item.type,
+    provider: item.provider,
+    model: item.model,
+    aspectRatio: item.aspect_ratio,
+    imageUrl: item.image_url,
+    cost: item.cost,
+    variantGroup: item.variant_group,
+    collectionId: item.collection_id,
+    createdAt: item.created_at
+  };
+}
+
 router.delete('/history', async (req, res) => {
   try {
-    const history = await readHistory();
+    const history = db.getHistory();
+    const items = Array.isArray(history) ? history : history.items || [];
 
     // Delete all image files
-    for (const item of history) {
+    for (const item of items) {
       try {
         await fs.unlink(join(IMAGES_PATH, `${item.id}.png`));
       } catch {
-        // Continue even if file doesn't exist
+        // Continue
       }
     }
 
-    // Clear history
-    await writeHistory([]);
-
-    res.json({ success: true, deleted: history.length });
+    const result = db.clearHistory();
+    res.json({ success: true, deleted: result.changes });
   } catch (error) {
     console.error('Clear history error:', error);
     res.status(500).json({ error: 'Failed to clear history' });
   }
 });
 
-// DELETE /api/history/:id - Delete a generation
 router.delete('/history/:id', async (req, res) => {
   try {
     const { id } = req.params;
-
-    const history = await readHistory();
-    const index = history.findIndex(item => item.id === id);
-
-    if (index === -1) {
-      return res.status(404).json({ error: 'Not found' });
-    }
 
     // Delete image file
     try {
       await fs.unlink(join(IMAGES_PATH, `${id}.png`));
     } catch {
-      // Image might not exist, continue anyway
+      // Continue
     }
 
-    // Remove from history
-    history.splice(index, 1);
-    await writeHistory(history);
+    const deleted = db.deleteHistory(id);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Not found' });
+    }
 
     res.json({ success: true });
   } catch (error) {
     console.error('Delete error:', error);
     res.status(500).json({ error: 'Failed to delete' });
+  }
+});
+
+// ============ COLLECTIONS ENDPOINTS ============
+
+router.get('/collections', (req, res) => {
+  try {
+    const collections = db.getCollections() || [];
+    res.json(collections.map(c => ({
+      id: c.id,
+      name: c.name,
+      description: c.description,
+      itemCount: c.item_count || 0,
+      createdAt: c.created_at
+    })));
+  } catch (error) {
+    console.error('Collections error:', error);
+    res.status(500).json({ error: 'Failed to fetch collections' });
+  }
+});
+
+router.post('/collections', (req, res) => {
+  try {
+    const { name, description } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
+    const collection = {
+      id: uuidv4(),
+      name,
+      description,
+      createdAt: new Date().toISOString()
+    };
+
+    db.addCollection(collection);
+    res.json({ success: true, collection });
+  } catch (error) {
+    console.error('Create collection error:', error);
+    res.status(500).json({ error: 'Failed to create collection' });
+  }
+});
+
+router.put('/collections/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description } = req.body;
+
+    db.updateCollection(id, { name, description });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Update collection error:', error);
+    res.status(500).json({ error: 'Failed to update collection' });
+  }
+});
+
+router.delete('/collections/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    db.deleteCollection(id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete collection error:', error);
+    res.status(500).json({ error: 'Failed to delete collection' });
+  }
+});
+
+router.get('/collections/:id/items', (req, res) => {
+  try {
+    const { id } = req.params;
+    const items = db.getHistory({ collectionId: id });
+    const result = Array.isArray(items) ? items : items.items || [];
+    res.json(result.map(mapHistoryItem));
+  } catch (error) {
+    console.error('Collection items error:', error);
+    res.status(500).json({ error: 'Failed to fetch collection items' });
+  }
+});
+
+router.post('/history/:id/collection', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { collectionId } = req.body;
+
+    db.updateHistoryCollection(id, collectionId || null);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Update collection error:', error);
+    res.status(500).json({ error: 'Failed to update collection' });
+  }
+});
+
+// ============ FAVORITES ENDPOINTS ============
+
+router.get('/favorites', (req, res) => {
+  try {
+    const favorites = db.getFavorites();
+    res.json(favorites.map(mapHistoryItem));
+  } catch (error) {
+    console.error('Favorites error:', error);
+    res.status(500).json({ error: 'Failed to fetch favorites' });
+  }
+});
+
+router.post('/favorites/:historyId', (req, res) => {
+  try {
+    const { historyId } = req.params;
+    const id = uuidv4();
+    db.addFavorite(id, historyId);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Add favorite error:', error);
+    res.status(500).json({ error: 'Failed to add favorite' });
+  }
+});
+
+router.delete('/favorites/:historyId', (req, res) => {
+  try {
+    const { historyId } = req.params;
+    db.removeFavorite(historyId);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Remove favorite error:', error);
+    res.status(500).json({ error: 'Failed to remove favorite' });
+  }
+});
+
+// ============ EXPORT/IMPORT ENDPOINTS ============
+
+router.get('/export', (req, res) => {
+  try {
+    const data = db.exportData();
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', 'attachment; filename=sakuga-export.json');
+    res.json(data);
+  } catch (error) {
+    console.error('Export error:', error);
+    res.status(500).json({ error: 'Failed to export data' });
+  }
+});
+
+router.post('/import', express.json({ limit: '50mb' }), (req, res) => {
+  try {
+    const data = req.body;
+
+    if (!data || (!data.history && !data.collections)) {
+      return res.status(400).json({ error: 'Invalid import data' });
+    }
+
+    const result = db.importData(data);
+    res.json({ success: true, imported: result });
+  } catch (error) {
+    console.error('Import error:', error);
+    res.status(500).json({ error: 'Failed to import data' });
   }
 });
 

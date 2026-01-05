@@ -7,7 +7,10 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { existsSync } from 'fs';
 import apiRoutes from './routes/api.js';
+import authRoutes from './routes/auth.js';
+import { authenticate } from './middleware/auth.js';
 import { errorHandler } from './utils/errors.js';
+import { cleanExpiredSessions } from './db/index.js';
 
 dotenv.config();
 
@@ -23,8 +26,23 @@ app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// Authentication middleware (adds req.user if authenticated)
+app.use(authenticate);
+
+// Auth routes
+app.use('/api/auth', authRoutes);
+
 // API routes
 app.use('/api', apiRoutes);
+
+// Clean expired sessions periodically (every hour)
+setInterval(() => {
+  try {
+    cleanExpiredSessions();
+  } catch (e) {
+    console.error('Session cleanup error:', e);
+  }
+}, 60 * 60 * 1000);
 
 // Serve images from storage with caching headers
 app.use('/api/images', express.static(join(__dirname, '../storage/images'), {

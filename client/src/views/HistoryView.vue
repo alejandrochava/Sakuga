@@ -5,6 +5,7 @@ import HistoryGrid from '../components/HistoryGrid.vue';
 import HistoryFilters from '../components/HistoryFilters.vue';
 import ImageLightbox from '../components/ImageLightbox.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
+import ErrorState from '../components/ErrorState.vue';
 import { useToast } from '../composables/useToast';
 
 const router = useRouter();
@@ -107,12 +108,22 @@ function saveFavorites() {
 }
 
 async function fetchHistory() {
+  isLoading.value = true;
+  error.value = null;
+
   try {
     const response = await fetch('/api/history');
-    if (!response.ok) throw new Error('Failed to fetch history');
-    history.value = await response.json();
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || `Server error (${response.status})`);
+    }
+
+    const data = await response.json();
+    history.value = Array.isArray(data) ? data : [];
   } catch (err) {
-    error.value = err.message;
+    console.error('History fetch error:', err);
+    error.value = err.message || 'Failed to load history';
   } finally {
     isLoading.value = false;
   }
@@ -308,9 +319,12 @@ function handleUsePrompt(prompt) {
     </div>
 
     <!-- Error -->
-    <div v-else-if="error" class="p-4 bg-red-500/10 rounded-neu-sm shadow-neu-inset-sm">
-      <p class="text-red-400 text-sm">{{ error }}</p>
-    </div>
+    <ErrorState
+      v-else-if="error"
+      title="Unable to Load History"
+      :message="error"
+      @retry="fetchHistory"
+    />
 
     <!-- History Grid -->
     <HistoryGrid

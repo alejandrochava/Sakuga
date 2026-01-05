@@ -10,6 +10,30 @@
     "build": "npm run build --prefix client",
     "start": "npm run start --prefix server",
     "prod": "npm run build && npm run start",
-    "install:all": "npm install --prefix server && npm install --prefix client"
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "test:unit": "npm run test:run --prefix client",
+    "test:e2e": "npx playwright test",
+    "test:e2e:ui": "npx playwright test --ui",
+    "test": "npm run test:unit && npm run test:e2e"
+  },
+  "description": "Sakuga (作画) is a personal image generation tool I built to experiment with Google's Gemini image model. The name comes from the Japanese term for animation/drawing - felt fitting for an app that creates images.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alejandrochava/Sakuga.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/alejandrochava/Sakuga/issues"
+  },
+  "homepage": "https://github.com/alejandrochava/Sakuga#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.57.0"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3"
   }
 }

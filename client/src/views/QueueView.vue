@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import QueueList from '../components/QueueList.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
+import ErrorState from '../components/ErrorState.vue';
 
 const queue = ref([]);
 const isLoading = ref(true);
@@ -11,11 +12,18 @@ let pollInterval = null;
 async function fetchQueue() {
   try {
     const response = await fetch('/api/queue');
-    if (!response.ok) throw new Error('Failed to fetch queue');
-    queue.value = await response.json();
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || `Server error (${response.status})`);
+    }
+
+    const data = await response.json();
+    queue.value = Array.isArray(data) ? data : [];
     error.value = null;
   } catch (err) {
-    error.value = err.message;
+    console.error('Queue fetch error:', err);
+    error.value = err.message || 'Failed to load queue';
   } finally {
     isLoading.value = false;
   }
@@ -59,9 +67,12 @@ onUnmounted(() => {
       <LoadingSpinner size="lg" text="Loading queue..." />
     </div>
 
-    <div v-else-if="error" class="p-4 bg-red-500/10 rounded-neu-sm shadow-neu-inset-sm">
-      <p class="text-red-400 text-sm">{{ error }}</p>
-    </div>
+    <ErrorState
+      v-else-if="error"
+      title="Unable to Load Queue"
+      :message="error"
+      @retry="fetchQueue"
+    />
 
     <QueueList
       v-else

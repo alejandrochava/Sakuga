@@ -1,0 +1,43 @@
+# Dependencies
+node_modules
+*/node_modules
+
+# Build outputs (we rebuild in Docker)
+client/dist
+*.log
+
+# Environment files (should be provided at runtime)
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+**/*.test.js
+**/*.spec.js
+**/tests
+**/__tests__
+
+# Documentation
+*.md
+!README.md
+
+# Storage (mount as volume instead)
+server/storage
+
+# Misc
+.claude
+*.bak
