@@ -112,7 +112,7 @@ onMounted(fetchProviders);
           v-for="provider in cloudProviders"
           :key="provider.id"
           @click="selectProvider(provider.id)"
-          class="px-4 py-2 rounded-neu-sm text-sm font-medium transition-all duration-200"
+          class="px-4 py-2.5 min-h-[44px] rounded-neu-sm text-sm font-medium transition-all duration-200"
           :class="selectedProvider === provider.id
             ? 'bg-neu-surface shadow-neu-inset-sm text-accent'
             : 'bg-neu-surface shadow-neu-raised-sm text-text-secondary hover:shadow-neu-raised hover:text-text-primary'"
@@ -135,7 +135,7 @@ onMounted(fetchProviders);
           v-for="provider in localProviders"
           :key="provider.id"
           @click="selectProvider(provider.id)"
-          class="px-4 py-2 rounded-neu-sm text-sm font-medium transition-all duration-200"
+          class="px-4 py-2.5 min-h-[44px] rounded-neu-sm text-sm font-medium transition-all duration-200"
           :class="selectedProvider === provider.id
             ? 'bg-neu-surface shadow-neu-inset-sm text-accent'
             : 'bg-neu-surface shadow-neu-raised-sm text-text-secondary hover:shadow-neu-raised hover:text-text-primary'"

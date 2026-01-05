@@ -80,10 +80,10 @@ function downloadImage(item) {
           :alt="item.prompt"
           class="w-full h-full object-cover"
         />
-        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
           <button
             @click="downloadImage(item)"
-            class="w-10 h-10 bg-neu-surface shadow-neu-raised-sm hover:shadow-neu-raised rounded-full flex items-center justify-center text-text-primary transition-all duration-200"
+            class="w-11 h-11 bg-neu-surface shadow-neu-raised-sm hover:shadow-neu-raised rounded-full flex items-center justify-center text-text-primary transition-all duration-200 hover:scale-105"
             title="Download"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,7 +93,7 @@ function downloadImage(item) {
           <button
             @click="handleDelete(item.id)"
             :disabled="deletingId === item.id"
-            class="w-10 h-10 bg-red-500/20 hover:bg-red-500/40 rounded-full flex items-center justify-center text-red-400 transition-colors disabled:opacity-50"
+            class="w-11 h-11 bg-red-500/20 hover:bg-red-500/40 rounded-full flex items-center justify-center text-red-400 transition-all disabled:opacity-50 hover:scale-105"
             title="Delete"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

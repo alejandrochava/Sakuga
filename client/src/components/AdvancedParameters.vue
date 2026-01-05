@@ -142,7 +142,7 @@ onUnmounted(() => {
     <button
       ref="buttonRef"
       @click="isOpen = !isOpen"
-      class="flex items-center gap-2 px-3 py-2 bg-neu-surface rounded-neu-sm transition-all duration-200"
+      class="flex items-center gap-2 px-3 py-2.5 min-h-[44px] bg-neu-surface rounded-neu-sm transition-all duration-200"
       :class="isOpen
         ? 'shadow-neu-inset-sm text-accent'
         : 'shadow-neu-raised-sm hover:shadow-neu-raised text-text-secondary hover:text-text-primary'"
@@ -151,18 +151,18 @@ onUnmounted(() => {
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
-      <span class="text-sm font-medium">Advanced</span>
-      <span v-if="summaryText" class="text-xs text-accent/70 hidden sm:inline">
+      <span class="text-sm font-medium hidden sm:inline">Advanced</span>
+      <span v-if="summaryText" class="text-xs text-accent/70 hidden md:inline">
         ({{ summaryText }})
       </span>
     </button>
 
-    <!-- Popover -->
+    <!-- Desktop Popover -->
     <Transition name="popover">
       <div
         v-if="isOpen"
         ref="popoverRef"
-        class="absolute bottom-full mb-2 right-0 w-72 p-4 bg-neu-surface rounded-neu-md shadow-neu-raised-lg backdrop-blur-sm border border-neu-border/20 z-50"
+        class="hidden sm:block absolute bottom-full mb-2 right-0 w-72 p-4 bg-neu-surface rounded-neu-md shadow-neu-raised-lg backdrop-blur-sm border border-neu-border/20 z-50"
       >
         <!-- Header -->
         <div class="flex items-center justify-between mb-4 pb-2 border-b border-neu-border/20">
@@ -175,6 +175,7 @@ onUnmounted(() => {
           </button>
         </div>
 
+        <!-- Content -->
         <div class="space-y-4">
           <!-- Seed -->
           <div v-if="supportedParams.includes('seed')" class="space-y-1.5">
@@ -261,6 +262,129 @@ onUnmounted(() => {
         <div class="absolute -bottom-2 right-6 w-4 h-4 bg-neu-surface rotate-45 border-r border-b border-neu-border/20"></div>
       </div>
     </Transition>
+
+    <!-- Mobile Bottom Sheet Backdrop -->
+    <Transition name="backdrop">
+      <div
+        v-if="isOpen"
+        @click="isOpen = false"
+        class="sm:hidden fixed inset-0 bg-black/50 z-40"
+      />
+    </Transition>
+
+    <!-- Mobile Bottom Sheet -->
+    <Transition name="slide-up">
+      <div
+        v-if="isOpen"
+        ref="popoverRef"
+        class="sm:hidden fixed inset-x-0 bottom-0 p-5 pb-8 bg-neu-surface rounded-t-2xl shadow-neu-raised-lg z-50 max-h-[80vh] overflow-y-auto"
+      >
+        <!-- Handle bar -->
+        <div class="w-12 h-1 bg-neu-border/50 rounded-full mx-auto mb-4" />
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4 pb-2 border-b border-neu-border/20">
+          <h3 class="text-base font-semibold text-text-primary">Advanced Settings</h3>
+          <button
+            @click="resetToDefaults"
+            class="text-sm text-text-muted hover:text-accent transition-colors"
+          >
+            Reset
+          </button>
+        </div>
+
+        <!-- Content -->
+        <div class="space-y-5">
+          <!-- Seed -->
+          <div v-if="supportedParams.includes('seed')" class="space-y-2">
+            <label class="flex items-center justify-between text-sm font-medium text-text-secondary">
+              <span>Seed</span>
+              <span class="text-text-muted text-xs">-1 = random</span>
+            </label>
+            <div class="flex gap-2">
+              <input
+                v-model.number="seed"
+                type="number"
+                min="-1"
+                max="2147483647"
+                class="flex-1 px-3 py-2.5 bg-neu-dark rounded-neu-sm shadow-neu-inset-sm text-text-primary text-base focus:outline-none focus:ring-1 focus:ring-accent"
+              />
+              <button
+                @click="randomizeSeed"
+                class="px-3 py-2.5 bg-neu-surface shadow-neu-raised-sm hover:shadow-neu-raised rounded-neu-sm text-text-secondary hover:text-accent transition-all"
+                title="Random seed"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Steps -->
+          <div v-if="supportedParams.includes('steps')" class="space-y-2">
+            <label class="flex items-center justify-between text-sm font-medium text-text-secondary">
+              <span>Steps</span>
+              <span class="text-accent tabular-nums">{{ steps }}</span>
+            </label>
+            <input
+              v-model.number="steps"
+              type="range"
+              min="10"
+              max="100"
+              step="5"
+              class="w-full accent-accent h-2"
+            />
+          </div>
+
+          <!-- CFG Scale -->
+          <div v-if="supportedParams.includes('cfgScale')" class="space-y-2">
+            <label class="flex items-center justify-between text-sm font-medium text-text-secondary">
+              <span>CFG Scale</span>
+              <span class="text-accent tabular-nums">{{ cfgScale }}</span>
+            </label>
+            <input
+              v-model.number="cfgScale"
+              type="range"
+              min="1"
+              max="20"
+              step="0.5"
+              class="w-full accent-accent h-2"
+            />
+          </div>
+
+          <!-- Sampler -->
+          <div v-if="supportedParams.includes('sampler')" class="space-y-2">
+            <label class="text-sm font-medium text-text-secondary">Sampler</label>
+            <select
+              v-model="sampler"
+              class="w-full px-3 py-2.5 bg-neu-dark rounded-neu-sm shadow-neu-inset-sm text-text-primary text-base focus:outline-none focus:ring-1 focus:ring-accent"
+            >
+              <option v-for="s in samplers" :key="s" :value="s">{{ s }}</option>
+            </select>
+          </div>
+
+          <!-- Negative Prompt -->
+          <div v-if="supportedParams.includes('negativePrompt')" class="space-y-2">
+            <label class="text-sm font-medium text-text-secondary">Negative Prompt</label>
+            <textarea
+              v-model="negativePrompt"
+              rows="3"
+              placeholder="What to avoid..."
+              class="w-full px-3 py-2.5 bg-neu-dark rounded-neu-sm shadow-neu-inset-sm text-text-primary text-base focus:outline-none focus:ring-1 focus:ring-accent resize-none placeholder:text-text-muted/50"
+            />
+          </div>
+        </div>
+
+        <!-- Done button -->
+        <button
+          @click="isOpen = false"
+          class="w-full mt-6 py-3 bg-accent text-neu-dark font-semibold rounded-neu-sm"
+        >
+          Done
+        </button>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -301,11 +425,11 @@ input[type="range"]::-webkit-slider-runnable-track {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: var(--color-accent, #00ff88);
-  margin-top: -5px;
+  margin-top: -7px;
   box-shadow: 0 2px 6px rgba(0, 255, 136, 0.3);
   transition: transform 0.1s ease;
 }
@@ -321,8 +445,8 @@ input[type="range"]::-moz-range-track {
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: var(--color-accent, #00ff88);
   border: none;

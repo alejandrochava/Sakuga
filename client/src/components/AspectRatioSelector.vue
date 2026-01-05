@@ -27,7 +27,7 @@ function selectRatio(value) {
       v-for="ratio in ratios"
       :key="ratio.value"
       @click="selectRatio(ratio.value)"
-      class="flex items-center gap-2 px-3 py-2 rounded-neu-sm transition-all duration-200"
+      class="flex items-center gap-2 px-3 py-2.5 min-h-[44px] rounded-neu-sm transition-all duration-200"
       :class="modelValue === ratio.value
         ? 'bg-neu-surface shadow-neu-inset-sm text-accent'
         : 'bg-neu-surface shadow-neu-raised-sm text-text-secondary hover:shadow-neu-raised hover:text-text-primary'"

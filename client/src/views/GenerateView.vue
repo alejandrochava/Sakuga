@@ -272,7 +272,7 @@ function handleUpscaled(data) {
     </div>
 
     <!-- Input Form -->
-    <div class="card p-6 space-y-5">
+    <div class="card p-5 sm:p-6 lg:p-8 space-y-5">
       <!-- Prompt -->
       <div>
         <label class="block text-sm font-medium text-text-secondary mb-2">Prompt</label>
@@ -299,7 +299,7 @@ function handleUpscaled(data) {
       </div>
 
       <!-- Options Row -->
-      <div class="flex flex-wrap gap-4 items-center">
+      <div class="flex flex-col sm:flex-row flex-wrap gap-4">
         <!-- Aspect Ratio (for generate mode) -->
         <div v-if="mode === 'generate'">
           <label class="block text-sm font-medium text-text-secondary mb-2">Aspect Ratio</label>
@@ -313,11 +313,11 @@ function handleUpscaled(data) {
       </div>
 
       <!-- Actions -->
-      <div class="flex gap-3 pt-2 items-center">
+      <div class="flex flex-col sm:flex-row gap-3 pt-2">
         <button
           @click="handleSubmit"
           :disabled="!canSubmit || isLoading"
-          class="btn btn-primary flex-1 py-3"
+          class="btn btn-primary flex-1 py-3 order-first"
         >
           <span v-if="!isLoading">Generate</span>
           <span v-else class="flex items-center justify-center gap-2">
@@ -325,29 +325,31 @@ function handleUpscaled(data) {
             {{ loadingText }}
           </span>
         </button>
-        <button
-          v-if="mode === 'generate'"
-          @click="addToQueue"
-          :disabled="!prompt.trim() || isLoading"
-          class="btn btn-secondary"
-          title="Add to queue for background processing"
-        >
-          + Queue
-        </button>
-        <button
-          @click="handleClear"
-          :disabled="isLoading"
-          class="btn btn-secondary"
-        >
-          Clear
-        </button>
+        <div class="flex gap-3">
+          <button
+            v-if="mode === 'generate'"
+            @click="addToQueue"
+            :disabled="!prompt.trim() || isLoading"
+            class="btn btn-secondary flex-1 sm:flex-none"
+            title="Add to queue for background processing"
+          >
+            + Queue
+          </button>
+          <button
+            @click="handleClear"
+            :disabled="isLoading"
+            class="btn btn-secondary flex-1 sm:flex-none"
+          >
+            Clear
+          </button>
 
-        <!-- Advanced Parameters (floating button with popover) -->
-        <AdvancedParameters
-          v-if="mode === 'generate'"
-          :provider="provider"
-          v-model="advancedParams"
-        />
+          <!-- Advanced Parameters (floating button with popover) -->
+          <AdvancedParameters
+            v-if="mode === 'generate'"
+            :provider="provider"
+            v-model="advancedParams"
+          />
+        </div>
       </div>
     </div>
 
@@ -357,25 +359,27 @@ function handleUpscaled(data) {
     </div>
 
     <!-- Result -->
-    <div v-if="result && result.images.length > 0" class="mt-6">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-text-primary">Result</h2>
-        <CostBadge :cost="totalCost" size="lg" />
-      </div>
+    <Transition name="fade">
+      <div v-if="result && result.images.length > 0" class="mt-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-text-primary">Result</h2>
+          <CostBadge :cost="totalCost" size="lg" />
+        </div>
 
-      <VariantGrid
-        :images="result.images"
-        @select="(img) => {}"
-      />
-
-      <!-- Upscale button for single result -->
-      <div v-if="result.images.length === 1" class="mt-4 flex justify-end">
-        <UpscaleButton
-          :image-url="result.images[0].imageUrl"
-          :provider="provider"
-          @upscaled="handleUpscaled"
+        <VariantGrid
+          :images="result.images"
+          @select="(img) => {}"
         />
+
+        <!-- Upscale button for single result -->
+        <div v-if="result.images.length === 1" class="mt-4 flex justify-end">
+          <UpscaleButton
+            :image-url="result.images[0].imageUrl"
+            :provider="provider"
+            @upscaled="handleUpscaled"
+          />
+        </div>
       </div>
-    </div>
+    </Transition>
   </div>
 </template>

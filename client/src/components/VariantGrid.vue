@@ -34,11 +34,11 @@ function downloadAll() {
 <template>
   <div v-if="images.length > 0" class="space-y-4">
     <!-- Main Preview -->
-    <div class="relative aspect-square neu-raised p-2 overflow-hidden">
+    <div class="relative aspect-square neu-raised p-2 overflow-hidden group">
       <img
         :src="images[selectedIndex]?.imageUrl"
         :alt="images[selectedIndex]?.prompt"
-        class="w-full h-full object-contain rounded-neu-sm"
+        class="w-full h-full object-contain rounded-neu-sm transition-transform duration-300 group-hover:scale-[1.02]"
       />
       <div class="absolute bottom-4 right-4 flex gap-2">
         <button
@@ -54,12 +54,12 @@ function downloadAll() {
     </div>
 
     <!-- Thumbnails -->
-    <div v-if="images.length > 1" class="flex gap-2">
+    <div v-if="images.length > 1" class="flex gap-2 flex-wrap">
       <button
         v-for="(image, index) in images"
         :key="image.id"
         @click="selectImage(index)"
-        class="relative w-20 h-20 rounded-neu-sm overflow-hidden transition-all duration-200"
+        class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-neu-sm overflow-hidden transition-all duration-200 hover:scale-105"
         :class="selectedIndex === index
           ? 'shadow-neu-inset-sm ring-2 ring-accent/50'
           : 'shadow-neu-raised-sm hover:shadow-neu-raised'"
