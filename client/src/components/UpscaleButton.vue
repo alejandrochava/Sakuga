@@ -1,10 +1,17 @@
 <script setup>
 import { ref } from 'vue';
+import { useToast } from '../composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
   imageUrl: {
     type: String,
     required: true
+  },
+  provider: {
+    type: String,
+    default: 'stability'
   }
 });
 
@@ -26,7 +33,7 @@ async function upscale() {
     const formData = new FormData();
     formData.append('image', imageBlob, 'image.png');
     formData.append('scale', scale.value.toString());
-    formData.append('provider', 'stability');
+    formData.append('provider', props.provider);
 
     const response = await fetch('/api/upscale', {
       method: 'POST',
@@ -40,9 +47,10 @@ async function upscale() {
     }
 
     emit('upscaled', data);
+    toast.success('Image upscaled successfully!');
   } catch (error) {
     console.error('Upscale error:', error);
-    alert(error.message);
+    toast.error(`Upscale failed: ${error.message}`);
   } finally {
     isUpscaling.value = false;
   }

@@ -1,9 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import GenerateView from '../views/GenerateView.vue';
-import HistoryView from '../views/HistoryView.vue';
-import QueueView from '../views/QueueView.vue';
-import StatsView from '../views/StatsView.vue';
-import HelpView from '../views/HelpView.vue';
+
+// Lazy load secondary views for code splitting
+const HistoryView = () => import('../views/HistoryView.vue');
+const QueueView = () => import('../views/QueueView.vue');
+const StatsView = () => import('../views/StatsView.vue');
+const HelpView = () => import('../views/HelpView.vue');
 
 const routes = [
   {

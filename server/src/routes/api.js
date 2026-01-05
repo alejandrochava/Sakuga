@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs/promises';
 import * as providers from '../services/providers/index.js';
+import { validateGenerate, validateEdit, validateInpaint, validateUpscale, validateQueue } from '../middleware/validate.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -78,9 +79,21 @@ router.get('/providers', (req, res) => {
 });
 
 // POST /api/generate - Text to image
-router.post('/generate', async (req, res) => {
+router.post('/generate', validateGenerate, async (req, res) => {
   try {
-    const { prompt, provider = 'openai', model, aspectRatio, count = 1 } = req.body;
+    const {
+      prompt,
+      provider = 'openai',
+      model,
+      aspectRatio,
+      count = 1,
+      // Advanced parameters
+      seed,
+      steps,
+      cfgScale,
+      negativePrompt,
+      sampler
+    } = req.body;
 
     if (!prompt) {
       return res.status(400).json({ error: 'Prompt is required' });
@@ -90,7 +103,13 @@ router.post('/generate', async (req, res) => {
       prompt,
       model,
       aspectRatio,
-      count: Math.min(count, 4)
+      count: Math.min(count, 4),
+      // Pass advanced parameters
+      seed,
+      steps,
+      cfgScale,
+      negativePrompt,
+      sampler
     });
 
     if (!result.images || result.images.length === 0) {
@@ -100,6 +119,7 @@ router.post('/generate', async (req, res) => {
     const variantGroup = count > 1 ? uuidv4() : null;
     const savedImages = [];
     const history = await readHistory();
+    const perImageCost = result.images.length > 0 ? result.cost / result.images.length : 0;
 
     for (const image of result.images) {
       const id = uuidv4();
@@ -113,7 +133,7 @@ router.post('/generate', async (req, res) => {
         model,
         aspectRatio,
         imageUrl,
-        cost: result.cost / result.images.length,
+        cost: perImageCost,
         variantGroup,
         createdAt: new Date().toISOString()
       };
@@ -136,7 +156,7 @@ router.post('/generate', async (req, res) => {
 });
 
 // POST /api/edit - Edit image with prompt
-router.post('/edit', upload.single('image'), async (req, res) => {
+router.post('/edit', upload.single('image'), validateEdit, async (req, res) => {
   try {
     const { prompt, provider = 'openai' } = req.body;
     const imageFile = req.file;
@@ -186,7 +206,7 @@ router.post('/edit', upload.single('image'), async (req, res) => {
 router.post('/inpaint', upload.fields([
   { name: 'image', maxCount: 1 },
   { name: 'mask', maxCount: 1 }
-]), async (req, res) => {
+]), validateInpaint, async (req, res) => {
   try {
     const { prompt, provider = 'stability' } = req.body;
     const imageFile = req.files?.image?.[0];
@@ -236,7 +256,7 @@ router.post('/inpaint', upload.fields([
 });
 
 // POST /api/upscale - Upscale image
-router.post('/upscale', upload.single('image'), async (req, res) => {
+router.post('/upscale', upload.single('image'), validateUpscale, async (req, res) => {
   try {
     const { provider = 'stability', scale = 2 } = req.body;
     const imageFile = req.file;
@@ -333,7 +353,7 @@ router.post('/enhance-prompt', async (req, res) => {
 
 // Queue endpoints
 // POST /api/queue - Add job to queue
-router.post('/queue', async (req, res) => {
+router.post('/queue', validateQueue, async (req, res) => {
   try {
     const { prompt, provider = 'openai', model, aspectRatio, count = 1 } = req.body;
 
@@ -426,6 +446,7 @@ async function processQueue() {
 
         const history = await readHistory();
         const variantGroup = pendingJob.count > 1 ? uuidv4() : null;
+        const perImageCost = result.images.length > 0 ? result.cost / result.images.length : 0;
 
         for (const image of result.images) {
           const id = uuidv4();
@@ -437,7 +458,7 @@ async function processQueue() {
             type: 'generate',
             provider: pendingJob.provider,
             imageUrl,
-            cost: result.cost / result.images.length,
+            cost: perImageCost,
             variantGroup,
             fromQueue: true,
             createdAt: new Date().toISOString()

@@ -37,6 +37,7 @@ export function getAvailableProviders() {
       name: 'OpenAI DALL-E',
       models: ['dall-e-3', 'dall-e-2'],
       features: ['generate', 'edit', 'variants'],
+      advancedParams: [],
       costPerImage: 0.04
     });
   }
@@ -47,6 +48,7 @@ export function getAvailableProviders() {
       name: 'Stability AI',
       models: ['sd3-large', 'sd3-medium', 'sdxl-1.0'],
       features: ['generate', 'edit', 'inpaint', 'upscale', 'variants'],
+      advancedParams: ['seed', 'negativePrompt'],
       costPerImage: 0.003
     });
   }
@@ -57,6 +59,7 @@ export function getAvailableProviders() {
       name: 'Replicate',
       models: ['flux-pro', 'flux-schnell', 'sdxl'],
       features: ['generate', 'upscale', 'variants'],
+      advancedParams: ['seed', 'steps'],
       costPerImage: 0.003
     });
   }
@@ -67,6 +70,7 @@ export function getAvailableProviders() {
       name: 'Google Gemini',
       models: ['gemini-2.0-flash-exp-image-generation'],
       features: ['generate', 'edit'],
+      advancedParams: [],
       costPerImage: 0.02
     });
   }
@@ -77,6 +81,7 @@ export function getAvailableProviders() {
       name: 'Ideogram',
       models: ['V_2', 'V_2_TURBO', 'V_1', 'V_1_TURBO'],
       features: ['generate', 'variants'],
+      advancedParams: ['negativePrompt'],
       costPerImage: 0.08
     });
   }
@@ -87,6 +92,7 @@ export function getAvailableProviders() {
       name: 'FAL.ai',
       models: ['flux-pro', 'flux-dev', 'flux-schnell', 'flux-realism', 'sdxl'],
       features: ['generate', 'edit', 'variants'],
+      advancedParams: ['seed', 'steps'],
       costPerImage: 0.01
     });
   }
@@ -97,6 +103,7 @@ export function getAvailableProviders() {
       name: 'Together AI',
       models: ['flux-schnell', 'flux-dev'],
       features: ['generate', 'variants'],
+      advancedParams: ['seed', 'steps'],
       costPerImage: 0.003
     });
   }
@@ -107,6 +114,7 @@ export function getAvailableProviders() {
       name: 'Black Forest Labs',
       models: ['flux-pro-1.1', 'flux-pro', 'flux-dev', 'flux-schnell'],
       features: ['generate', 'variants'],
+      advancedParams: ['seed', 'steps'],
       costPerImage: 0.025
     });
   }
@@ -117,6 +125,7 @@ export function getAvailableProviders() {
       name: 'Automatic1111 (Local)',
       models: ['loaded-model'],
       features: ['generate', 'edit', 'inpaint', 'variants'],
+      advancedParams: ['seed', 'steps', 'cfgScale', 'negativePrompt', 'sampler'],
       costPerImage: 0
     });
   }

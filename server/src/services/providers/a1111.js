@@ -5,7 +5,17 @@ function getApiUrl() {
   return process.env.A1111_URL || 'http://localhost:7860';
 }
 
-export async function generate({ prompt, negativePrompt = '', aspectRatio = '1:1', count = 1 }) {
+export async function generate({
+  prompt,
+  negativePrompt = '',
+  aspectRatio = '1:1',
+  count = 1,
+  // Advanced parameters with defaults
+  seed = -1,
+  steps = 30,
+  cfgScale = 7,
+  sampler = 'DPM++ 2M Karras'
+}) {
   const apiUrl = getApiUrl();
 
   // Map aspect ratio to dimensions
@@ -27,11 +37,12 @@ export async function generate({ prompt, negativePrompt = '', aspectRatio = '1:1
     body: JSON.stringify({
       prompt,
       negative_prompt: negativePrompt,
-      steps: 30,
+      seed: seed ?? -1,
+      steps: steps ?? 30,
       width: size.width,
       height: size.height,
-      cfg_scale: 7,
-      sampler_name: 'DPM++ 2M Karras',
+      cfg_scale: cfgScale ?? 7,
+      sampler_name: sampler ?? 'DPM++ 2M Karras',
       batch_size: count
     })
   });
@@ -50,7 +61,17 @@ export async function generate({ prompt, negativePrompt = '', aspectRatio = '1:1
   return { images, cost: 0 }; // Free - runs locally
 }
 
-export async function edit({ prompt, imageBase64, mimeType, negativePrompt = '', strength = 0.75 }) {
+export async function edit({
+  prompt,
+  imageBase64,
+  mimeType,
+  negativePrompt = '',
+  strength = 0.75,
+  seed = -1,
+  steps = 30,
+  cfgScale = 7,
+  sampler = 'DPM++ 2M Karras'
+}) {
   const apiUrl = getApiUrl();
 
   const response = await fetch(`${apiUrl}/sdapi/v1/img2img`, {
@@ -63,9 +84,10 @@ export async function edit({ prompt, imageBase64, mimeType, negativePrompt = '',
       negative_prompt: negativePrompt,
       init_images: [imageBase64],
       denoising_strength: strength,
-      steps: 30,
-      cfg_scale: 7,
-      sampler_name: 'DPM++ 2M Karras'
+      seed: seed ?? -1,
+      steps: steps ?? 30,
+      cfg_scale: cfgScale ?? 7,
+      sampler_name: sampler ?? 'DPM++ 2M Karras'
     })
   });
 
@@ -84,7 +106,17 @@ export async function edit({ prompt, imageBase64, mimeType, negativePrompt = '',
   };
 }
 
-export async function inpaint({ prompt, imageBase64, maskBase64, mimeType, negativePrompt = '' }) {
+export async function inpaint({
+  prompt,
+  imageBase64,
+  maskBase64,
+  mimeType,
+  negativePrompt = '',
+  seed = -1,
+  steps = 30,
+  cfgScale = 7,
+  sampler = 'DPM++ 2M Karras'
+}) {
   const apiUrl = getApiUrl();
 
   const response = await fetch(`${apiUrl}/sdapi/v1/img2img`, {
@@ -100,9 +132,10 @@ export async function inpaint({ prompt, imageBase64, maskBase64, mimeType, negat
       inpainting_fill: 1, // original
       inpaint_full_res: true,
       denoising_strength: 0.75,
-      steps: 30,
-      cfg_scale: 7,
-      sampler_name: 'DPM++ 2M Karras'
+      seed: seed ?? -1,
+      steps: steps ?? 30,
+      cfg_scale: cfgScale ?? 7,
+      sampler_name: sampler ?? 'DPM++ 2M Karras'
     })
   });
 

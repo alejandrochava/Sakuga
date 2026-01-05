@@ -76,12 +76,13 @@ function draw(e) {
 
   lastX = x;
   lastY = y;
-
-  emitMask();
 }
 
 function stopDrawing() {
-  isDrawing.value = false;
+  if (isDrawing.value) {
+    isDrawing.value = false;
+    emitMask();
+  }
 }
 
 function clearMask() {

@@ -1,5 +1,6 @@
 <script setup>
 import { RouterLink, RouterView, useRoute } from 'vue-router';
+import ToastNotification from './components/ToastNotification.vue';
 
 const route = useRoute();
 </script>
@@ -58,5 +59,8 @@ const route = useRoute();
     <main class="max-w-6xl mx-auto px-4 py-8">
       <RouterView />
     </main>
+
+    <!-- Toast Notifications -->
+    <ToastNotification />
   </div>
 </template>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onUnmounted } from 'vue';
 import PromptInput from '../components/PromptInput.vue';
 import ImageUpload from '../components/ImageUpload.vue';
 import AspectRatioSelector from '../components/AspectRatioSelector.vue';
@@ -11,6 +11,10 @@ import MaskEditor from '../components/MaskEditor.vue';
 import UpscaleButton from '../components/UpscaleButton.vue';
 import CostBadge from '../components/CostBadge.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
+import AdvancedParameters from '../components/AdvancedParameters.vue';
+import { useToast } from '../composables/useToast';
+
+const toast = useToast();
 
 const prompt = ref('');
 const selectedImage = ref(null);
@@ -31,6 +35,7 @@ const enhancedPromptText = ref('');
 const showEnhanced = ref(false);
 const maskData = ref(null);
 const totalCost = ref(0);
+const advancedParams = ref({});
 
 const modes = computed(() => {
   const baseModes = [
@@ -76,6 +81,11 @@ function handleProviderChange({ provider: p, model: m, features }) {
 }
 
 function handleImageSelect(file) {
+  // Clean up previous URL to prevent memory leak
+  if (selectedImageUrl.value) {
+    URL.revokeObjectURL(selectedImageUrl.value);
+  }
+
   selectedImage.value = file;
   if (file) {
     selectedImageUrl.value = URL.createObjectURL(file);
@@ -83,6 +93,13 @@ function handleImageSelect(file) {
     selectedImageUrl.value = null;
   }
 }
+
+// Cleanup on unmount
+onUnmounted(() => {
+  if (selectedImageUrl.value) {
+    URL.revokeObjectURL(selectedImageUrl.value);
+  }
+});
 
 function handleMaskReady(mask) {
   maskData.value = mask;
@@ -127,7 +144,8 @@ async function handleSubmit() {
           provider: provider.value,
           model: model.value,
           aspectRatio: aspectRatio.value,
-          count: variantCount.value
+          count: variantCount.value,
+          ...advancedParams.value
         })
       });
     } else if (mode.value === 'inpaint') {
@@ -150,7 +168,7 @@ async function handleSubmit() {
       formData.append('provider', provider.value);
       formData.append('image', selectedImage.value);
 
-      const endpoint = mode.value === 'edit' ? '/api/edit' : '/api/edit';
+      const endpoint = '/api/edit';
       response = await fetch(endpoint, {
         method: 'POST',
         body: formData
@@ -199,9 +217,9 @@ async function addToQueue() {
       throw new Error('Failed to add to queue');
     }
 
-    alert('Added to queue!');
+    toast.success('Added to queue!');
   } catch (err) {
-    alert(err.message);
+    toast.error(err.message);
   }
 }
 
@@ -294,6 +312,13 @@ function handleUpscaled(data) {
         </div>
       </div>
 
+      <!-- Advanced Parameters -->
+      <AdvancedParameters
+        v-if="mode === 'generate'"
+        :provider="provider"
+        v-model="advancedParams"
+      />
+
       <!-- Actions -->
       <div class="flex gap-3 pt-2">
         <button
@@ -347,6 +372,7 @@ function handleUpscaled(data) {
       <div v-if="result.images.length === 1" class="mt-4 flex justify-end">
         <UpscaleButton
           :image-url="result.images[0].imageUrl"
+          :provider="provider"
           @upscaled="handleUpscaled"
         />
       </div>
