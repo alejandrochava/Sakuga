@@ -4,7 +4,8 @@ import { useRouter } from 'vue-router';
 import HistoryGrid from '../components/HistoryGrid.vue';
 import HistoryFilters from '../components/HistoryFilters.vue';
 import ImageLightbox from '../components/ImageLightbox.vue';
-import LoadingSpinner from '../components/LoadingSpinner.vue';
+import SkeletonLoader from '../components/SkeletonLoader.vue';
+import EmptyState from '../components/EmptyState.vue';
 import ErrorState from '../components/ErrorState.vue';
 import { useToast } from '../composables/useToast';
 import { downloadImage } from '../utils/download';
@@ -302,9 +303,9 @@ function handleUsePrompt(prompt) {
       </div>
     </Transition>
 
-    <!-- Loading -->
-    <div v-if="isLoading" class="py-16">
-      <LoadingSpinner size="lg" text="Loading history..." />
+    <!-- Loading Skeleton -->
+    <div v-if="isLoading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <SkeletonLoader type="image" :count="12" />
     </div>
 
     <!-- Error -->
@@ -313,6 +314,24 @@ function handleUsePrompt(prompt) {
       title="Unable to Load History"
       :message="error"
       @retry="fetchHistory"
+    />
+
+    <!-- Empty State -->
+    <EmptyState
+      v-else-if="history.length === 0"
+      icon="image"
+      title="No generations yet"
+      description="Your generated images will appear here. Start creating to build your history."
+      action-label="Start Creating"
+      @action="router.push({ name: 'generate' })"
+    />
+
+    <!-- No Results -->
+    <EmptyState
+      v-else-if="filteredHistory.length === 0"
+      icon="search"
+      title="No results found"
+      description="Try adjusting your filters or search query."
     />
 
     <!-- History Grid -->

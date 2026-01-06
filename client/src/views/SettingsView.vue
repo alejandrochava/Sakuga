@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { useToast } from '../composables/useToast';
+import SkeletonLoader from '../components/SkeletonLoader.vue';
 
 const toast = useToast();
 
@@ -229,8 +230,21 @@ watch(settings, () => {
   <div class="max-w-2xl mx-auto">
     <h1 class="text-2xl font-bold text-text-primary mb-6">Settings</h1>
 
-    <div v-if="isLoading" class="text-center py-16 text-text-muted">
-      Loading settings...
+    <!-- Loading Skeleton -->
+    <div v-if="isLoading" class="space-y-6">
+      <div class="card p-6">
+        <div class="skeleton h-6 w-24 rounded mb-4"></div>
+        <div class="space-y-4">
+          <SkeletonLoader type="card" :count="3" class-name="!p-4 !space-y-2" />
+        </div>
+      </div>
+      <div class="card p-6">
+        <div class="skeleton h-6 w-32 rounded mb-4"></div>
+        <div class="space-y-3">
+          <div class="skeleton h-10 w-full rounded"></div>
+          <div class="skeleton h-10 w-full rounded"></div>
+        </div>
+      </div>
     </div>
 
     <div v-else class="space-y-6">

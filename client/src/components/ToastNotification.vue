@@ -73,24 +73,36 @@ const textColors = {
 
 <style scoped>
 .toast-enter-active {
-  transition: all 0.3s ease-out;
+  animation: toast-in 0.4s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
 }
 
 .toast-leave-active {
-  transition: all 0.2s ease-in;
-}
-
-.toast-enter-from {
-  opacity: 0;
-  transform: translateX(100%);
-}
-
-.toast-leave-to {
-  opacity: 0;
-  transform: translateX(100%);
+  animation: toast-out 0.3s ease-in forwards;
 }
 
 .toast-move {
   transition: transform 0.3s ease;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%) scale(0.9);
+  }
 }
 </style>

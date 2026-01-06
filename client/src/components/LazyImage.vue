@@ -89,8 +89,8 @@ onUnmounted(() => {
       v-if="isVisible && !hasError"
       :src="src"
       :alt="alt"
-      class="w-full h-full object-cover transition-opacity duration-300"
-      :class="{ 'opacity-0': !isLoaded, 'opacity-100': isLoaded }"
+      class="w-full h-full object-cover"
+      :class="isLoaded ? 'image-loaded' : 'opacity-0'"
       @load="onLoad"
       @error="onError"
     />

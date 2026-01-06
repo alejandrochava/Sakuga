@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useToast } from '../composables/useToast';
+import EmptyState from './EmptyState.vue';
 
 const toast = useToast();
 
@@ -19,14 +20,14 @@ function formatDate(dateString) {
   return new Date(dateString).toLocaleTimeString();
 }
 
-function getStatusColor(status) {
-  const colors = {
-    pending: 'text-yellow-400',
-    processing: 'text-blue-400',
-    completed: 'text-accent',
-    failed: 'text-red-400'
+function getStatusBadgeClass(status) {
+  const classes = {
+    pending: 'badge-pending',
+    processing: 'badge-processing',
+    completed: 'badge-completed',
+    failed: 'badge-failed'
   };
-  return colors[status] || 'text-text-muted';
+  return classes[status] || 'badge-pending';
 }
 
 async function retryJob(job) {
@@ -47,10 +48,12 @@ async function retryJob(job) {
 </script>
 
 <template>
-  <div v-if="jobs.length === 0" class="text-center py-8 text-text-muted">
-    <p>No jobs in queue</p>
-    <p class="text-sm mt-1">Add prompts to generate them in the background</p>
-  </div>
+  <EmptyState
+    v-if="jobs.length === 0"
+    icon="clock"
+    title="Queue is empty"
+    description="Jobs you queue will appear here. Start generating to see them in action."
+  />
 
   <div v-else class="space-y-3">
     <div
@@ -69,10 +72,8 @@ async function retryJob(job) {
           </div>
         </div>
 
-        <span
-          class="px-2.5 py-1 bg-neu-inset shadow-neu-inset-sm rounded-full text-xs font-medium"
-          :class="getStatusColor(job.status)"
-        >
+        <span :class="getStatusBadgeClass(job.status)">
+          <span v-if="job.status === 'processing'" class="w-2 h-2 bg-current rounded-full animate-pulse"></span>
           {{ job.status }}
         </span>
 

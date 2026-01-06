@@ -63,15 +63,15 @@ function getTypeLabel(type) {
   return labels[type] || type;
 }
 
-function getTypeColor(type) {
-  const colors = {
-    'generate': 'text-accent',
-    'edit': 'text-blue-400',
-    'image-to-image': 'text-purple-400',
-    'inpaint': 'text-orange-400',
-    'upscale': 'text-cyan-400'
+function getTypeBadgeClass(type) {
+  const classes = {
+    'generate': 'badge-generate',
+    'edit': 'badge-edit',
+    'image-to-image': 'badge-edit',
+    'inpaint': 'badge-inpaint',
+    'upscale': 'badge-upscale'
   };
-  return colors[type] || 'text-text-muted';
+  return classes[type] || 'badge-generate';
 }
 
 async function handleDelete(id) {
@@ -111,13 +111,14 @@ function isSelected(id) {
 
   <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
     <div
-      v-for="item in items"
+      v-for="(item, index) in items"
       :key="item.id"
-      class="card overflow-hidden group hover-lift relative"
+      class="card overflow-hidden group hover-lift relative grid-item-animate"
       :class="{
-        'ring-2 ring-accent': isSelected(item.id),
+        'ring-2 ring-accent shadow-accent-glow-sm': isSelected(item.id),
         'cursor-pointer': true
       }"
+      :style="{ animationDelay: `${Math.min(index * 50, 500)}ms` }"
       @click="handleCardClick(item)"
     >
       <!-- Selection Checkbox -->
@@ -217,8 +218,8 @@ function isSelected(id) {
 
         <!-- Type Badge -->
         <span
-          class="absolute top-2 left-2 px-2.5 py-1 bg-neu-surface/90 shadow-neu-raised-sm rounded-full text-xs font-medium"
-          :class="getTypeColor(item.type)"
+          class="absolute top-2 left-2"
+          :class="getTypeBadgeClass(item.type)"
         >
           {{ getTypeLabel(item.type) }}
         </span>

@@ -1,7 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import LoadingSpinner from '../components/LoadingSpinner.vue';
+import SkeletonLoader from '../components/SkeletonLoader.vue';
+import EmptyState from '../components/EmptyState.vue';
 import HistoryGrid from '../components/HistoryGrid.vue';
 import ErrorState from '../components/ErrorState.vue';
 import { useToast } from '../composables/useToast';
@@ -212,9 +213,9 @@ function handleUsePrompt(prompt) {
       </button>
     </div>
 
-    <!-- Loading -->
-    <div v-if="isLoading" class="py-16">
-      <LoadingSpinner size="lg" text="Loading collections..." />
+    <!-- Loading Skeleton -->
+    <div v-if="isLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <SkeletonLoader type="card" :count="6" />
     </div>
 
     <!-- Error -->
@@ -227,16 +228,17 @@ function handleUsePrompt(prompt) {
 
     <!-- Collection Items View -->
     <div v-else-if="selectedCollection">
-      <div v-if="isLoadingItems" class="py-16">
-        <LoadingSpinner size="lg" text="Loading items..." />
+      <div v-if="isLoadingItems" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <SkeletonLoader type="image" :count="8" />
       </div>
-      <div v-else-if="collectionItems.length === 0" class="text-center py-16">
-        <svg class="w-16 h-16 mx-auto mb-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-        </svg>
-        <p class="text-text-secondary">This collection is empty</p>
-        <p class="text-text-muted text-sm mt-1">Add images from your history</p>
-      </div>
+      <EmptyState
+        v-else-if="collectionItems.length === 0"
+        icon="folder"
+        title="This collection is empty"
+        description="Add images from your history to organize them here."
+        action-label="Go to History"
+        @action="router.push({ name: 'history' })"
+      />
       <HistoryGrid
         v-else
         :items="collectionItems"
@@ -247,22 +249,21 @@ function handleUsePrompt(prompt) {
 
     <!-- Collections Grid -->
     <div v-else>
-      <div v-if="collections.length === 0" class="text-center py-16">
-        <svg class="w-16 h-16 mx-auto mb-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-        </svg>
-        <p class="text-text-secondary">No collections yet</p>
-        <p class="text-text-muted text-sm mt-1">Create a collection to organize your images</p>
-        <button @click="openCreateModal" class="btn btn-primary mt-4">
-          Create Collection
-        </button>
-      </div>
+      <EmptyState
+        v-if="collections.length === 0"
+        icon="folder"
+        title="No collections yet"
+        description="Create a collection to organize your generated images."
+        action-label="Create Collection"
+        @action="openCreateModal"
+      />
 
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div
-          v-for="collection in collections"
+          v-for="(collection, index) in collections"
           :key="collection.id"
-          class="card p-5 cursor-pointer hover-lift group"
+          class="card p-5 cursor-pointer hover-lift group grid-item-animate"
+          :style="{ animationDelay: `${index * 80}ms` }"
           @click="selectCollection(collection)"
         >
           <div class="flex items-start justify-between">

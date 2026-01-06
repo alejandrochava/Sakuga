@@ -38,11 +38,12 @@ const navItems = [
         </RouterLink>
 
         <!-- Desktop Navigation -->
-        <nav class="hidden md:flex gap-2">
+        <nav class="hidden md:flex gap-1">
           <RouterLink
             v-for="item in navItems"
             :key="item.path"
             :to="item.path"
+            class="relative"
             :class="route.path === item.path ? 'nav-item-active' : 'nav-item'"
           >
             {{ item.label }}

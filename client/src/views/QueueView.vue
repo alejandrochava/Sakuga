@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import QueueList from '../components/QueueList.vue';
-import LoadingSpinner from '../components/LoadingSpinner.vue';
+import SkeletonLoader from '../components/SkeletonLoader.vue';
 import ErrorState from '../components/ErrorState.vue';
 
 const queue = ref([]);
@@ -63,8 +63,9 @@ onUnmounted(() => {
       </p>
     </div>
 
-    <div v-if="isLoading" class="py-16">
-      <LoadingSpinner size="lg" text="Loading queue..." />
+    <!-- Loading Skeleton -->
+    <div v-if="isLoading" class="space-y-3">
+      <SkeletonLoader type="card" :count="4" class-name="!p-4 !space-y-2" />
     </div>
 
     <ErrorState

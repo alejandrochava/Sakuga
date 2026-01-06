@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import LoadingSpinner from '../components/LoadingSpinner.vue';
+import SkeletonLoader from '../components/SkeletonLoader.vue';
+import EmptyState from '../components/EmptyState.vue';
 import ErrorState from '../components/ErrorState.vue';
 
 const stats = ref(null);
@@ -95,8 +96,15 @@ onMounted(fetchStats);
   <div>
     <h1 class="text-2xl font-bold text-text-primary mb-6">Usage Stats</h1>
 
-    <div v-if="isLoading" class="py-16">
-      <LoadingSpinner size="lg" text="Loading stats..." />
+    <!-- Loading Skeleton -->
+    <div v-if="isLoading" class="space-y-6">
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <SkeletonLoader type="stat" :count="5" />
+      </div>
+      <div class="card p-5">
+        <div class="skeleton h-6 w-32 rounded mb-4"></div>
+        <div class="skeleton h-24 w-full rounded"></div>
+      </div>
     </div>
 
     <ErrorState
