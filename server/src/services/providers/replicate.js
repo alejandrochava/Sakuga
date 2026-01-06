@@ -1,9 +1,26 @@
 import Replicate from 'replicate';
 import { fetchImageAsBase64 } from '../utils/imageConverter.js';
+import { getApiKeyForProvider } from './index.js';
 
-const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_TOKEN
-});
+let replicate = null;
+let currentApiKey = null;
+
+function getClient() {
+  const apiKey = getApiKeyForProvider('replicate');
+
+  if (apiKey !== currentApiKey) {
+    replicate = null;
+    currentApiKey = apiKey;
+  }
+
+  if (!replicate && apiKey) {
+    replicate = new Replicate({ auth: apiKey });
+  }
+  if (!replicate) {
+    throw new Error('Replicate API key not configured');
+  }
+  return replicate;
+}
 
 const MODELS = {
   'flux-pro': 'black-forest-labs/flux-pro',
@@ -12,11 +29,12 @@ const MODELS = {
 };
 
 export async function generate({ prompt, model = 'flux-schnell', aspectRatio = '1:1', count = 1 }) {
+  const client = getClient();
   const images = [];
   const modelId = MODELS[model] || MODELS['flux-schnell'];
 
   for (let i = 0; i < count; i++) {
-    const output = await replicate.run(modelId, {
+    const output = await client.run(modelId, {
       input: {
         prompt,
         aspect_ratio: aspectRatio,
@@ -38,10 +56,11 @@ export async function generate({ prompt, model = 'flux-schnell', aspectRatio = '
 }
 
 export async function upscale({ imageBase64, mimeType, scale = 2 }) {
+  const client = getClient();
   // Use Real-ESRGAN for upscaling
   const dataUrl = `data:${mimeType};base64,${imageBase64}`;
 
-  const output = await replicate.run(
+  const output = await client.run(
     'nightmareai/real-esrgan:f121d640bd286e1fdc67f9799164c1d5be36ff74576ee11c803ae5b665dd46aa',
     {
       input: {

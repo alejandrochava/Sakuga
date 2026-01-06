@@ -1,8 +1,15 @@
+import { getApiKeyForProvider } from './index.js';
+
 const API_HOST = 'https://api.stability.ai';
 
 async function callStabilityAPI(endpoint, body, isFormData = false) {
+  const apiKey = getApiKeyForProvider('stability');
+  if (!apiKey) {
+    throw new Error('Stability API key not configured');
+  }
+
   const headers = {
-    'Authorization': `Bearer ${process.env.STABILITY_API_KEY}`,
+    'Authorization': `Bearer ${apiKey}`,
     'Accept': 'application/json'
   };
 

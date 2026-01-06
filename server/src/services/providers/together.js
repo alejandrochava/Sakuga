@@ -1,3 +1,5 @@
+import { getApiKeyForProvider } from './index.js';
+
 const API_URL = 'https://api.together.xyz/v1/images/generations';
 
 const MODELS = {
@@ -6,7 +8,8 @@ const MODELS = {
 };
 
 export async function generate({ prompt, model = 'flux-schnell', aspectRatio = '1:1', count = 1 }) {
-  if (!process.env.TOGETHER_API_KEY) {
+  const apiKey = getApiKeyForProvider('together');
+  if (!apiKey) {
     throw new Error('Together AI API key not configured');
   }
 
@@ -26,7 +29,7 @@ export async function generate({ prompt, model = 'flux-schnell', aspectRatio = '
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${process.env.TOGETHER_API_KEY}`,
+      'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({

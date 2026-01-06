@@ -1,10 +1,30 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getApiKeyForProvider } from './index.js';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const MODEL_NAME = 'gemini-2.0-flash-exp-image-generation';
 
+let genAI = null;
+let currentApiKey = null;
+
+function getGenAI() {
+  const apiKey = getApiKeyForProvider('gemini');
+
+  if (apiKey !== currentApiKey) {
+    genAI = null;
+    currentApiKey = apiKey;
+  }
+
+  if (!genAI && apiKey) {
+    genAI = new GoogleGenerativeAI(apiKey);
+  }
+  if (!genAI) {
+    throw new Error('Gemini API key not configured');
+  }
+  return genAI;
+}
+
 export async function generate({ prompt, count = 1 }) {
-  const model = genAI.getGenerativeModel({
+  const model = getGenAI().getGenerativeModel({
     model: MODEL_NAME,
     generationConfig: {
       responseModalities: ['Text', 'Image']
@@ -36,7 +56,7 @@ export async function generate({ prompt, count = 1 }) {
 }
 
 export async function edit({ prompt, imageBase64, mimeType }) {
-  const model = genAI.getGenerativeModel({
+  const model = getGenAI().getGenerativeModel({
     model: MODEL_NAME,
     generationConfig: {
       responseModalities: ['Text', 'Image']

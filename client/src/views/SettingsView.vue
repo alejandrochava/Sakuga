@@ -20,6 +20,14 @@ const settings = ref({
 const providers = ref([]);
 const isLoading = ref(true);
 
+// API Keys state
+const apiKeys = ref([]);
+const providerInfo = ref({});
+const newApiKeys = ref({});
+const validatingProvider = ref(null);
+const savingProvider = ref(null);
+const showApiKeysSection = ref(true);
+
 const aspectRatios = [
   { value: '1:1', label: 'Square (1:1)' },
   { value: '16:9', label: 'Landscape (16:9)' },
@@ -36,7 +44,7 @@ const gridOptions = [
 
 onMounted(async () => {
   loadSettings();
-  await fetchProviders();
+  await Promise.all([fetchProviders(), fetchApiKeys()]);
   isLoading.value = false;
 });
 
@@ -64,6 +72,117 @@ async function fetchProviders() {
     }
   } catch {
     // Use empty array
+  }
+}
+
+async function fetchApiKeys() {
+  try {
+    const response = await fetch('/api/settings/api-keys');
+    if (response.ok) {
+      const data = await response.json();
+      apiKeys.value = data.keys || [];
+      providerInfo.value = data.providerInfo || {};
+    }
+  } catch {
+    // Use empty arrays
+  }
+}
+
+const allProviders = [
+  { id: 'openai', icon: 'O' },
+  { id: 'gemini', icon: 'G' },
+  { id: 'stability', icon: 'S' },
+  { id: 'replicate', icon: 'R' },
+  { id: 'fal', icon: 'F' },
+  { id: 'together', icon: 'T' },
+  { id: 'ideogram', icon: 'I' },
+  { id: 'bfl', icon: 'B' }
+];
+
+function getConfiguredKey(providerId) {
+  return apiKeys.value.find(k => k.provider === providerId);
+}
+
+async function saveApiKey(providerId) {
+  const key = newApiKeys.value[providerId];
+  if (!key || !key.trim()) {
+    toast.error('Please enter an API key');
+    return;
+  }
+
+  savingProvider.value = providerId;
+
+  try {
+    const response = await fetch('/api/settings/api-keys', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider: providerId, apiKey: key.trim() })
+    });
+
+    if (response.ok) {
+      newApiKeys.value[providerId] = '';
+      await fetchApiKeys();
+      await fetchProviders();
+      toast.success(`${providerInfo.value[providerId]?.name || providerId} key saved!`);
+    } else {
+      throw new Error('Failed to save');
+    }
+  } catch (error) {
+    toast.error('Failed to save API key');
+  } finally {
+    savingProvider.value = null;
+  }
+}
+
+async function deleteApiKey(providerId) {
+  if (!confirm(`Remove API key for ${providerInfo.value[providerId]?.name || providerId}?`)) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/settings/api-keys/${providerId}`, {
+      method: 'DELETE'
+    });
+
+    if (response.ok) {
+      await fetchApiKeys();
+      await fetchProviders();
+      toast.success('API key removed');
+    } else {
+      throw new Error('Failed to delete');
+    }
+  } catch (error) {
+    toast.error('Failed to remove API key');
+  }
+}
+
+async function validateApiKey(providerId) {
+  const key = newApiKeys.value[providerId];
+  if (!key || !key.trim()) {
+    toast.error('Please enter an API key');
+    return;
+  }
+
+  validatingProvider.value = providerId;
+
+  try {
+    const response = await fetch('/api/settings/api-keys/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider: providerId, apiKey: key.trim() })
+    });
+
+    const data = await response.json();
+
+    if (data.valid) {
+      toast.success('API key is valid!');
+    } else {
+      toast.error('Invalid API key');
+    }
+  } catch (error) {
+    toast.error('Failed to validate key');
+  } finally {
+    validatingProvider.value = null;
   }
 }
 
@@ -115,6 +234,91 @@ watch(settings, () => {
     </div>
 
     <div v-else class="space-y-6">
+      <!-- API Keys Section -->
+      <section class="card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-text-primary">API Keys</h2>
+          <button
+            @click="showApiKeysSection = !showApiKeysSection"
+            class="text-sm text-accent hover:underline"
+          >
+            {{ showApiKeysSection ? 'Hide' : 'Show' }}
+          </button>
+        </div>
+
+        <p class="text-sm text-text-muted mb-4">
+          {{ apiKeys.filter(k => !k.source).length }} provider(s) configured via app.
+          {{ apiKeys.filter(k => k.source === 'env').length > 0 ? `${apiKeys.filter(k => k.source === 'env').length} from environment.` : '' }}
+        </p>
+
+        <div v-if="showApiKeysSection" class="space-y-4">
+          <div
+            v-for="provider in allProviders"
+            :key="provider.id"
+            class="p-4 bg-neu-inset shadow-neu-inset-sm rounded-neu-sm"
+          >
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent font-bold text-sm flex-shrink-0">
+                {{ provider.icon }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-1">
+                  <h3 class="font-medium text-text-primary text-sm">
+                    {{ providerInfo[provider.id]?.name || provider.id }}
+                  </h3>
+                  <a
+                    :href="providerInfo[provider.id]?.keyUrl"
+                    target="_blank"
+                    class="text-xs text-accent hover:underline"
+                  >
+                    Get key
+                  </a>
+                </div>
+
+                <!-- Configured key display -->
+                <div v-if="getConfiguredKey(provider.id)" class="flex items-center gap-2 mb-2">
+                  <span class="text-xs text-text-muted font-mono">
+                    {{ getConfiguredKey(provider.id).apiKey }}
+                  </span>
+                  <span v-if="getConfiguredKey(provider.id).source === 'env'" class="text-xs text-accent">(env)</span>
+                  <button
+                    v-if="getConfiguredKey(provider.id).source !== 'env'"
+                    @click="deleteApiKey(provider.id)"
+                    class="text-xs text-red-400 hover:underline ml-auto"
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                <!-- Add/Update key input -->
+                <div class="flex gap-2">
+                  <input
+                    v-model="newApiKeys[provider.id]"
+                    type="password"
+                    :placeholder="getConfiguredKey(provider.id) ? 'Enter new key to update' : 'Enter API key'"
+                    class="flex-1 px-2 py-1.5 bg-neu-surface shadow-neu-raised-sm rounded text-text-primary text-xs focus:outline-none focus:ring-1 focus:ring-accent/30"
+                  />
+                  <button
+                    @click="validateApiKey(provider.id)"
+                    :disabled="!newApiKeys[provider.id] || validatingProvider === provider.id"
+                    class="px-2 py-1.5 bg-neu-surface shadow-neu-raised-sm rounded text-xs text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
+                  >
+                    {{ validatingProvider === provider.id ? '...' : 'Test' }}
+                  </button>
+                  <button
+                    @click="saveApiKey(provider.id)"
+                    :disabled="!newApiKeys[provider.id] || savingProvider === provider.id"
+                    class="px-2 py-1.5 bg-accent/20 rounded text-xs text-accent hover:bg-accent/30 transition-colors disabled:opacity-50"
+                  >
+                    {{ savingProvider === provider.id ? '...' : 'Save' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Default Preferences -->
       <section class="card p-6">
         <h2 class="text-lg font-semibold text-text-primary mb-4">Default Preferences</h2>

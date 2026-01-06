@@ -1,4 +1,5 @@
 import { fetchImageAsBase64 } from '../utils/imageConverter.js';
+import { getApiKeyForProvider } from './index.js';
 
 const API_URL = 'https://api.bfl.ml/v1';
 
@@ -10,10 +11,11 @@ const MODELS = {
 };
 
 async function pollForResult(taskId, maxAttempts = 60) {
+  const apiKey = getApiKeyForProvider('bfl');
   for (let i = 0; i < maxAttempts; i++) {
     const response = await fetch(`${API_URL}/get_result?id=${taskId}`, {
       headers: {
-        'x-key': process.env.BFL_API_KEY
+        'x-key': apiKey
       }
     });
 
@@ -37,7 +39,8 @@ async function pollForResult(taskId, maxAttempts = 60) {
 }
 
 export async function generate({ prompt, model = 'flux-schnell', aspectRatio = '1:1', count = 1 }) {
-  if (!process.env.BFL_API_KEY) {
+  const apiKey = getApiKeyForProvider('bfl');
+  if (!apiKey) {
     throw new Error('Black Forest Labs API key not configured');
   }
 
@@ -60,7 +63,7 @@ export async function generate({ prompt, model = 'flux-schnell', aspectRatio = '
     const response = await fetch(`${API_URL}/${modelId}`, {
       method: 'POST',
       headers: {
-        'x-key': process.env.BFL_API_KEY,
+        'x-key': apiKey,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({

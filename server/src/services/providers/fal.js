@@ -1,9 +1,22 @@
 import { fal } from '@fal-ai/client';
 import { fetchImageAsBase64 } from '../utils/imageConverter.js';
+import { getApiKeyForProvider } from './index.js';
 
-// Configure FAL client
-if (process.env.FAL_KEY) {
-  fal.config({ credentials: process.env.FAL_KEY });
+let currentApiKey = null;
+
+function configureFal() {
+  const apiKey = getApiKeyForProvider('fal');
+
+  if (apiKey !== currentApiKey) {
+    currentApiKey = apiKey;
+    if (apiKey) {
+      fal.config({ credentials: apiKey });
+    }
+  }
+
+  if (!apiKey) {
+    throw new Error('FAL API key not configured');
+  }
 }
 
 const MODELS = {
@@ -15,9 +28,7 @@ const MODELS = {
 };
 
 export async function generate({ prompt, model = 'flux-schnell', aspectRatio = '1:1', count = 1 }) {
-  if (!process.env.FAL_KEY) {
-    throw new Error('FAL API key not configured');
-  }
+  configureFal();
 
   const modelId = MODELS[model] || MODELS['flux-schnell'];
 
@@ -55,9 +66,7 @@ export async function generate({ prompt, model = 'flux-schnell', aspectRatio = '
 }
 
 export async function edit({ prompt, imageBase64, mimeType, model = 'flux-dev' }) {
-  if (!process.env.FAL_KEY) {
-    throw new Error('FAL API key not configured');
-  }
+  configureFal();
 
   // Use img2img model
   const result = await fal.subscribe('fal-ai/flux/dev/image-to-image', {

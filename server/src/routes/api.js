@@ -713,6 +713,197 @@ router.delete('/favorites/:historyId', (req, res) => {
   }
 });
 
+// ============ SETUP & SETTINGS ENDPOINTS ============
+
+// Provider metadata for UI
+const PROVIDER_INFO = {
+  openai: {
+    name: 'OpenAI DALL-E',
+    keyUrl: 'https://platform.openai.com/api-keys',
+    keyPlaceholder: 'sk-...',
+    description: 'DALL-E 3 and DALL-E 2 image generation'
+  },
+  stability: {
+    name: 'Stability AI',
+    keyUrl: 'https://platform.stability.ai/account/keys',
+    keyPlaceholder: 'sk-...',
+    description: 'Stable Diffusion models'
+  },
+  replicate: {
+    name: 'Replicate',
+    keyUrl: 'https://replicate.com/account/api-tokens',
+    keyPlaceholder: 'r8_...',
+    description: 'Flux and SDXL models'
+  },
+  gemini: {
+    name: 'Google Gemini',
+    keyUrl: 'https://aistudio.google.com/apikey',
+    keyPlaceholder: 'AIza...',
+    description: 'Gemini 2.0 Flash image generation'
+  },
+  ideogram: {
+    name: 'Ideogram',
+    keyUrl: 'https://ideogram.ai/manage-api',
+    keyPlaceholder: 'api-...',
+    description: 'Ideogram V2 image generation'
+  },
+  fal: {
+    name: 'FAL.ai',
+    keyUrl: 'https://fal.ai/dashboard/keys',
+    keyPlaceholder: 'key-...',
+    description: 'Flux and SDXL models'
+  },
+  together: {
+    name: 'Together AI',
+    keyUrl: 'https://api.together.xyz/settings/api-keys',
+    keyPlaceholder: 'tok-...',
+    description: 'Flux models'
+  },
+  bfl: {
+    name: 'Black Forest Labs',
+    keyUrl: 'https://api.bfl.ml',
+    keyPlaceholder: 'bfl-...',
+    description: 'Native Flux models'
+  }
+};
+
+// GET /api/setup/status - Check if setup is complete
+router.get('/setup/status', (req, res) => {
+  try {
+    const setupComplete = db.isSetupComplete();
+    const configuredProviders = db.getConfiguredProviders();
+    const hasEnvKeys = checkEnvKeys();
+
+    res.json({
+      setupComplete: setupComplete || hasEnvKeys.length > 0,
+      configuredProviders: [...new Set([...configuredProviders, ...hasEnvKeys])],
+      providerInfo: PROVIDER_INFO
+    });
+  } catch (error) {
+    console.error('Setup status error:', error);
+    res.status(500).json({ error: 'Failed to check setup status' });
+  }
+});
+
+// POST /api/setup/complete - Mark setup as complete
+router.post('/setup/complete', (req, res) => {
+  try {
+    db.markSetupComplete();
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Setup complete error:', error);
+    res.status(500).json({ error: 'Failed to mark setup complete' });
+  }
+});
+
+// GET /api/settings/api-keys - List all configured API keys (masked)
+router.get('/settings/api-keys', (req, res) => {
+  try {
+    const dbKeys = db.getAllApiKeys();
+    const envKeys = checkEnvKeys();
+
+    // Merge DB keys with env keys info
+    const allKeys = [...dbKeys];
+
+    for (const provider of envKeys) {
+      if (!allKeys.find(k => k.provider === provider)) {
+        allKeys.push({
+          provider,
+          apiKey: '(from environment)',
+          isValid: true,
+          source: 'env'
+        });
+      }
+    }
+
+    res.json({
+      keys: allKeys,
+      providerInfo: PROVIDER_INFO
+    });
+  } catch (error) {
+    console.error('Get API keys error:', error);
+    res.status(500).json({ error: 'Failed to get API keys' });
+  }
+});
+
+// POST /api/settings/api-keys - Save an API key
+router.post('/settings/api-keys', async (req, res) => {
+  try {
+    const { provider, apiKey } = req.body;
+
+    if (!provider || !apiKey) {
+      return res.status(400).json({ error: 'Provider and apiKey are required' });
+    }
+
+    if (!PROVIDER_INFO[provider]) {
+      return res.status(400).json({ error: 'Invalid provider' });
+    }
+
+    // Save the key
+    db.setApiKey(provider, apiKey);
+
+    // Reload providers
+    providers.reloadProviders();
+
+    res.json({ success: true, provider });
+  } catch (error) {
+    console.error('Save API key error:', error);
+    res.status(500).json({ error: 'Failed to save API key' });
+  }
+});
+
+// DELETE /api/settings/api-keys/:provider - Delete an API key
+router.delete('/settings/api-keys/:provider', (req, res) => {
+  try {
+    const { provider } = req.params;
+
+    const deleted = db.deleteApiKey(provider);
+    if (!deleted) {
+      return res.status(404).json({ error: 'API key not found' });
+    }
+
+    // Reload providers
+    providers.reloadProviders();
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete API key error:', error);
+    res.status(500).json({ error: 'Failed to delete API key' });
+  }
+});
+
+// POST /api/settings/api-keys/validate - Validate an API key without saving
+router.post('/settings/api-keys/validate', async (req, res) => {
+  try {
+    const { provider, apiKey } = req.body;
+
+    if (!provider || !apiKey) {
+      return res.status(400).json({ error: 'Provider and apiKey are required' });
+    }
+
+    const isValid = await providers.validateApiKey(provider, apiKey);
+
+    res.json({ valid: isValid, provider });
+  } catch (error) {
+    console.error('Validate API key error:', error);
+    res.json({ valid: false, error: error.message });
+  }
+});
+
+// Helper to check which providers have env keys configured
+function checkEnvKeys() {
+  const envProviders = [];
+  if (process.env.OPENAI_API_KEY) envProviders.push('openai');
+  if (process.env.STABILITY_API_KEY) envProviders.push('stability');
+  if (process.env.REPLICATE_API_TOKEN) envProviders.push('replicate');
+  if (process.env.GEMINI_API_KEY) envProviders.push('gemini');
+  if (process.env.IDEOGRAM_API_KEY) envProviders.push('ideogram');
+  if (process.env.FAL_KEY) envProviders.push('fal');
+  if (process.env.TOGETHER_API_KEY) envProviders.push('together');
+  if (process.env.BFL_API_KEY) envProviders.push('bfl');
+  return envProviders;
+}
+
 // ============ EXPORT/IMPORT ENDPOINTS ============
 
 router.get('/export', (req, res) => {

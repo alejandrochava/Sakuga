@@ -1,9 +1,11 @@
 import { fetchImageAsBase64 } from '../utils/imageConverter.js';
+import { getApiKeyForProvider } from './index.js';
 
 const API_URL = 'https://api.ideogram.ai';
 
 export async function generate({ prompt, model = 'V_2', aspectRatio = '1:1', count = 1 }) {
-  if (!process.env.IDEOGRAM_API_KEY) {
+  const apiKey = getApiKeyForProvider('ideogram');
+  if (!apiKey) {
     throw new Error('Ideogram API key not configured');
   }
 
@@ -21,7 +23,7 @@ export async function generate({ prompt, model = 'V_2', aspectRatio = '1:1', cou
     const response = await fetch(`${API_URL}/generate`, {
       method: 'POST',
       headers: {
-        'Api-Key': process.env.IDEOGRAM_API_KEY,
+        'Api-Key': apiKey,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({

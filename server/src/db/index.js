@@ -98,6 +98,23 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_queue_status ON queue(status);
   CREATE INDEX IF NOT EXISTS idx_queue_user ON queue(user_id);
   CREATE INDEX IF NOT EXISTS idx_favorites_user ON favorites(user_id);
+
+  -- API Keys table (for setup wizard)
+  CREATE TABLE IF NOT EXISTS api_keys (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    provider TEXT UNIQUE NOT NULL,
+    api_key TEXT NOT NULL,
+    is_valid INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+
+  -- Settings table (for setup completion flag)
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
 `);
 
 // ============ HISTORY OPERATIONS ============
@@ -483,6 +500,84 @@ export function importData(data, userId = null) {
   });
 
   return transaction();
+}
+
+// ============ API KEYS OPERATIONS ============
+
+export function getApiKey(provider) {
+  const row = db.prepare('SELECT api_key FROM api_keys WHERE provider = ?').get(provider);
+  return row ? row.api_key : null;
+}
+
+export function getAllApiKeys() {
+  const rows = db.prepare('SELECT provider, api_key, is_valid, created_at, updated_at FROM api_keys').all();
+  return rows.map(row => ({
+    provider: row.provider,
+    apiKey: maskApiKey(row.api_key),
+    isValid: row.is_valid === 1,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  }));
+}
+
+export function setApiKey(provider, apiKey) {
+  const stmt = db.prepare(`
+    INSERT INTO api_keys (provider, api_key, updated_at)
+    VALUES (?, ?, datetime('now'))
+    ON CONFLICT(provider) DO UPDATE SET
+      api_key = excluded.api_key,
+      is_valid = 1,
+      updated_at = datetime('now')
+  `);
+  stmt.run(provider, apiKey);
+  return true;
+}
+
+export function deleteApiKey(provider) {
+  const result = db.prepare('DELETE FROM api_keys WHERE provider = ?').run(provider);
+  return result.changes > 0;
+}
+
+export function hasAnyApiKeys() {
+  const row = db.prepare('SELECT COUNT(*) as count FROM api_keys').get();
+  return row.count > 0;
+}
+
+export function getConfiguredProviders() {
+  return db.prepare('SELECT provider FROM api_keys').all().map(row => row.provider);
+}
+
+function maskApiKey(key) {
+  if (!key || key.length < 8) return '****';
+  return key.slice(0, 4) + '...' + key.slice(-4);
+}
+
+// ============ SETTINGS OPERATIONS ============
+
+export function getSetting(key) {
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
+  return row ? row.value : null;
+}
+
+export function setSetting(key, value) {
+  const stmt = db.prepare(`
+    INSERT INTO settings (key, value, updated_at)
+    VALUES (?, ?, datetime('now'))
+    ON CONFLICT(key) DO UPDATE SET
+      value = excluded.value,
+      updated_at = datetime('now')
+  `);
+  stmt.run(key, value);
+  return true;
+}
+
+export function isSetupComplete() {
+  const value = getSetting('setup_complete');
+  return value === 'true';
+}
+
+export function markSetupComplete() {
+  return setSetting('setup_complete', 'true');
 }
 
 // ============ MIGRATION ============

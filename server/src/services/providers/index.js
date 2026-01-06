@@ -7,6 +7,7 @@ import * as fal from './fal.js';
 import * as together from './together.js';
 import * as bfl from './bfl.js';
 import * as a1111 from './a1111.js';
+import { getApiKey as getDbApiKey } from '../../db/index.js';
 
 const providers = {
   openai,
@@ -20,6 +21,56 @@ const providers = {
   a1111
 };
 
+// Map provider IDs to their environment variable names
+const ENV_KEY_MAP = {
+  openai: 'OPENAI_API_KEY',
+  stability: 'STABILITY_API_KEY',
+  replicate: 'REPLICATE_API_TOKEN',
+  gemini: 'GEMINI_API_KEY',
+  ideogram: 'IDEOGRAM_API_KEY',
+  fal: 'FAL_KEY',
+  together: 'TOGETHER_API_KEY',
+  bfl: 'BFL_API_KEY',
+  a1111: 'A1111_URL'
+};
+
+// Cache for API keys (refreshed on reload)
+let apiKeyCache = {};
+
+// Get API key for a provider - checks DB first, then env vars
+export function getApiKeyForProvider(providerId) {
+  // Check cache first
+  if (apiKeyCache[providerId]) {
+    return apiKeyCache[providerId];
+  }
+
+  // Check database
+  const dbKey = getDbApiKey(providerId);
+  if (dbKey) {
+    apiKeyCache[providerId] = dbKey;
+    return dbKey;
+  }
+
+  // Fall back to environment variable
+  const envVar = ENV_KEY_MAP[providerId];
+  if (envVar && process.env[envVar]) {
+    apiKeyCache[providerId] = process.env[envVar];
+    return process.env[envVar];
+  }
+
+  return null;
+}
+
+// Check if a provider has an API key configured
+export function hasApiKey(providerId) {
+  return !!getApiKeyForProvider(providerId);
+}
+
+// Reload providers (clear cache to pick up new keys)
+export function reloadProviders() {
+  apiKeyCache = {};
+}
+
 export function getProvider(name) {
   const provider = providers[name];
   if (!provider) {
@@ -31,7 +82,7 @@ export function getProvider(name) {
 export function getAvailableProviders() {
   const available = [];
 
-  if (process.env.OPENAI_API_KEY) {
+  if (hasApiKey('openai')) {
     available.push({
       id: 'openai',
       name: 'OpenAI DALL-E',
@@ -43,7 +94,7 @@ export function getAvailableProviders() {
     });
   }
 
-  if (process.env.STABILITY_API_KEY) {
+  if (hasApiKey('stability')) {
     available.push({
       id: 'stability',
       name: 'Stability AI',
@@ -55,7 +106,7 @@ export function getAvailableProviders() {
     });
   }
 
-  if (process.env.REPLICATE_API_TOKEN) {
+  if (hasApiKey('replicate')) {
     available.push({
       id: 'replicate',
       name: 'Replicate',
@@ -67,7 +118,7 @@ export function getAvailableProviders() {
     });
   }
 
-  if (process.env.GEMINI_API_KEY) {
+  if (hasApiKey('gemini')) {
     available.push({
       id: 'gemini',
       name: 'Google Gemini',
@@ -79,7 +130,7 @@ export function getAvailableProviders() {
     });
   }
 
-  if (process.env.IDEOGRAM_API_KEY) {
+  if (hasApiKey('ideogram')) {
     available.push({
       id: 'ideogram',
       name: 'Ideogram',
@@ -91,7 +142,7 @@ export function getAvailableProviders() {
     });
   }
 
-  if (process.env.FAL_KEY) {
+  if (hasApiKey('fal')) {
     available.push({
       id: 'fal',
       name: 'FAL.ai',
@@ -103,7 +154,7 @@ export function getAvailableProviders() {
     });
   }
 
-  if (process.env.TOGETHER_API_KEY) {
+  if (hasApiKey('together')) {
     available.push({
       id: 'together',
       name: 'Together AI',
@@ -115,7 +166,7 @@ export function getAvailableProviders() {
     });
   }
 
-  if (process.env.BFL_API_KEY) {
+  if (hasApiKey('bfl')) {
     available.push({
       id: 'bfl',
       name: 'Black Forest Labs',
@@ -127,7 +178,7 @@ export function getAvailableProviders() {
     });
   }
 
-  if (process.env.A1111_URL) {
+  if (hasApiKey('a1111')) {
     available.push({
       id: 'a1111',
       name: 'Automatic1111',
@@ -169,4 +220,70 @@ export async function upscale(providerName, options) {
     throw new Error(`Provider ${providerName} does not support upscaling`);
   }
   return provider.upscale(options);
+}
+
+// Validate an API key by making a simple request
+export async function validateApiKey(providerId, apiKey) {
+  try {
+    switch (providerId) {
+      case 'openai': {
+        const OpenAI = (await import('openai')).default;
+        const client = new OpenAI({ apiKey });
+        await client.models.list();
+        return true;
+      }
+      case 'stability': {
+        const response = await fetch('https://api.stability.ai/v1/user/account', {
+          headers: { Authorization: `Bearer ${apiKey}` }
+        });
+        return response.ok;
+      }
+      case 'replicate': {
+        const response = await fetch('https://api.replicate.com/v1/account', {
+          headers: { Authorization: `Token ${apiKey}` }
+        });
+        return response.ok;
+      }
+      case 'gemini': {
+        const { GoogleGenerativeAI } = await import('@google/generative-ai');
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        await model.generateContent('test');
+        return true;
+      }
+      case 'ideogram': {
+        const response = await fetch('https://api.ideogram.ai/describe', {
+          method: 'POST',
+          headers: {
+            'Api-Key': apiKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ image_url: 'https://example.com/test.png' })
+        });
+        // 400 is ok (bad request), 401/403 means invalid key
+        return response.status !== 401 && response.status !== 403;
+      }
+      case 'fal': {
+        const { fal } = await import('@fal-ai/client');
+        fal.config({ credentials: apiKey });
+        // Just check if credentials are set - no simple validation endpoint
+        return apiKey && apiKey.length > 10;
+      }
+      case 'together': {
+        const response = await fetch('https://api.together.xyz/v1/models', {
+          headers: { Authorization: `Bearer ${apiKey}` }
+        });
+        return response.ok;
+      }
+      case 'bfl': {
+        // BFL doesn't have a simple validation endpoint
+        return apiKey && apiKey.length > 10;
+      }
+      default:
+        return false;
+    }
+  } catch (error) {
+    console.error(`API key validation error for ${providerId}:`, error.message);
+    return false;
+  }
 }

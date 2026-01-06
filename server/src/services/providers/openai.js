@@ -1,10 +1,20 @@
 import OpenAI from 'openai';
+import { getApiKeyForProvider } from './index.js';
 
 let client = null;
+let currentApiKey = null;
 
 function getClient() {
-  if (!client && process.env.OPENAI_API_KEY) {
-    client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const apiKey = getApiKeyForProvider('openai');
+
+  // Reinitialize client if API key changed
+  if (apiKey !== currentApiKey) {
+    client = null;
+    currentApiKey = apiKey;
+  }
+
+  if (!client && apiKey) {
+    client = new OpenAI({ apiKey });
   }
   if (!client) {
     throw new Error('OpenAI API key not configured');
