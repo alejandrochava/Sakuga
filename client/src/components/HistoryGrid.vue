@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useToast } from '../composables/useToast';
+import { downloadImage } from '../utils/download';
 import LazyImage from './LazyImage.vue';
 
 const toast = useToast();
@@ -78,13 +79,8 @@ async function handleDelete(id) {
   emit('delete', id);
 }
 
-function downloadImage(item) {
-  const link = document.createElement('a');
-  link.href = item.imageUrl;
-  link.download = `sakuga-${item.id}.png`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+function handleDownload(item) {
+  downloadImage(item.imageUrl, `sakuga-${item.id}.png`);
 }
 
 function handleCardClick(item) {
@@ -199,7 +195,7 @@ function isSelected(id) {
             </svg>
           </button>
           <button
-            @click="downloadImage(item)"
+            @click="handleDownload(item)"
             class="w-10 h-10 bg-neu-surface shadow-neu-raised-sm hover:shadow-neu-raised rounded-full flex items-center justify-center text-text-primary transition-all duration-200 hover:scale-105"
             title="Download"
           >

@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue';
+import { downloadImage } from '../utils/download';
 
 const props = defineProps({
   images: {
@@ -17,17 +18,12 @@ function selectImage(index) {
   emit('select', props.images[index]);
 }
 
-function downloadImage(image) {
-  const link = document.createElement('a');
-  link.href = image.imageUrl;
-  link.download = `sakuga-${image.id}.png`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+function handleDownload(image) {
+  downloadImage(image.imageUrl, `sakuga-${image.id}.png`);
 }
 
 function downloadAll() {
-  props.images.forEach(img => downloadImage(img));
+  props.images.forEach(img => handleDownload(img));
 }
 </script>
 
@@ -42,7 +38,7 @@ function downloadAll() {
       />
       <div class="absolute bottom-4 right-4 flex gap-2">
         <button
-          @click="downloadImage(images[selectedIndex])"
+          @click="handleDownload(images[selectedIndex])"
           class="px-3 py-1.5 bg-neu-surface shadow-neu-raised-sm hover:shadow-neu-raised rounded-neu-sm text-sm text-text-primary transition-all duration-200 flex items-center gap-1"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

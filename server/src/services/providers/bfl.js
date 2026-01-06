@@ -1,3 +1,5 @@
+import { fetchImageAsBase64 } from '../utils/imageConverter.js';
+
 const API_URL = 'https://api.bfl.ml/v1';
 
 const MODELS = {
@@ -6,12 +8,6 @@ const MODELS = {
   'flux-dev': 'flux-dev',
   'flux-schnell': 'flux-schnell'
 };
-
-async function fetchImageAsBase64(url) {
-  const response = await fetch(url);
-  const arrayBuffer = await response.arrayBuffer();
-  return Buffer.from(arrayBuffer).toString('base64');
-}
 
 async function pollForResult(taskId, maxAttempts = 60) {
   for (let i = 0; i < maxAttempts; i++) {

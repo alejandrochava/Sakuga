@@ -7,6 +7,7 @@ import ImageLightbox from '../components/ImageLightbox.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
 import ErrorState from '../components/ErrorState.vue';
 import { useToast } from '../composables/useToast';
+import { downloadImage } from '../utils/download';
 
 const router = useRouter();
 const toast = useToast();
@@ -194,12 +195,7 @@ function openLightbox(item) {
 }
 
 function handleLightboxDownload(image) {
-  const link = document.createElement('a');
-  link.href = image.imageUrl;
-  link.download = `sakuga-${image.id}.png`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  downloadImage(image.imageUrl, `sakuga-${image.id}.png`);
 }
 
 async function deleteSelected() {
@@ -225,14 +221,7 @@ async function deleteSelected() {
 
 function downloadSelected() {
   const selected = filteredHistory.value.filter(item => selectedIds.value.has(item.id));
-  selected.forEach(item => {
-    const link = document.createElement('a');
-    link.href = item.imageUrl;
-    link.download = `sakuga-${item.id}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  });
+  selected.forEach(item => downloadImage(item.imageUrl, `sakuga-${item.id}.png`));
   toast.success(`Downloaded ${selected.length} image${selected.length !== 1 ? 's' : ''}`);
 }
 

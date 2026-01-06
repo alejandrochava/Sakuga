@@ -1,4 +1,5 @@
 import Replicate from 'replicate';
+import { fetchImageAsBase64 } from '../utils/imageConverter.js';
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN
@@ -24,14 +25,11 @@ export async function generate({ prompt, model = 'flux-schnell', aspectRatio = '
       }
     });
 
-    // Fetch the image and convert to base64
     const imageUrl = Array.isArray(output) ? output[0] : output;
-    const response = await fetch(imageUrl);
-    const arrayBuffer = await response.arrayBuffer();
-    const base64 = Buffer.from(arrayBuffer).toString('base64');
+    const imageData = await fetchImageAsBase64(imageUrl);
 
     images.push({
-      imageData: base64,
+      imageData,
       mimeType: 'image/png'
     });
   }
@@ -54,13 +52,11 @@ export async function upscale({ imageBase64, mimeType, scale = 2 }) {
     }
   );
 
-  const response = await fetch(output);
-  const arrayBuffer = await response.arrayBuffer();
-  const base64 = Buffer.from(arrayBuffer).toString('base64');
+  const imageData = await fetchImageAsBase64(output);
 
   return {
     images: [{
-      imageData: base64,
+      imageData,
       mimeType: 'image/png'
     }],
     cost: 0.01

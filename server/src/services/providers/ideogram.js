@@ -1,10 +1,6 @@
-const API_URL = 'https://api.ideogram.ai';
+import { fetchImageAsBase64 } from '../utils/imageConverter.js';
 
-async function fetchImageAsBase64(url) {
-  const response = await fetch(url);
-  const arrayBuffer = await response.arrayBuffer();
-  return Buffer.from(arrayBuffer).toString('base64');
-}
+const API_URL = 'https://api.ideogram.ai';
 
 export async function generate({ prompt, model = 'V_2', aspectRatio = '1:1', count = 1 }) {
   if (!process.env.IDEOGRAM_API_KEY) {

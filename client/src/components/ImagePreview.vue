@@ -1,4 +1,6 @@
 <script setup>
+import { downloadImage } from '../utils/download';
+
 const props = defineProps({
   src: {
     type: String,
@@ -10,13 +12,8 @@ const props = defineProps({
   }
 });
 
-function downloadImage() {
-  const link = document.createElement('a');
-  link.href = props.src;
-  link.download = `sakuga-${Date.now()}.png`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+function handleDownload() {
+  downloadImage(props.src);
 }
 </script>
 
@@ -30,7 +27,7 @@ function downloadImage() {
       />
       <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
         <button
-          @click="downloadImage"
+          @click="handleDownload"
           class="btn btn-primary flex items-center gap-2"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

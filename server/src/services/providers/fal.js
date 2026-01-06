@@ -1,4 +1,5 @@
 import { fal } from '@fal-ai/client';
+import { fetchImageAsBase64 } from '../utils/imageConverter.js';
 
 // Configure FAL client
 if (process.env.FAL_KEY) {
@@ -12,12 +13,6 @@ const MODELS = {
   'flux-realism': 'fal-ai/flux-realism',
   'sdxl': 'fal-ai/fast-sdxl'
 };
-
-async function fetchImageAsBase64(url) {
-  const response = await fetch(url);
-  const arrayBuffer = await response.arrayBuffer();
-  return Buffer.from(arrayBuffer).toString('base64');
-}
 
 export async function generate({ prompt, model = 'flux-schnell', aspectRatio = '1:1', count = 1 }) {
   if (!process.env.FAL_KEY) {

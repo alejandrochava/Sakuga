@@ -2,7 +2,6 @@ import Database from 'better-sqlite3';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs';
-import bcrypt from 'bcryptjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -553,115 +552,6 @@ export async function migrateFromJSON() {
   }
 
   return migrated;
-}
-
-// ============ USER OPERATIONS ============
-
-export function createUser(username, password, email = null) {
-  const id = crypto.randomUUID();
-  const passwordHash = bcrypt.hashSync(password, 10);
-
-  try {
-    db.prepare(`
-      INSERT INTO users (id, username, password_hash, email, created_at)
-      VALUES (?, ?, ?, ?, datetime('now'))
-    `).run(id, username, passwordHash, email);
-
-    return { id, username, email };
-  } catch (e) {
-    if (e.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-      throw new Error('Username already exists');
-    }
-    throw e;
-  }
-}
-
-export function getUserById(id) {
-  const user = db.prepare('SELECT id, username, email, created_at FROM users WHERE id = ?').get(id);
-  return user || null;
-}
-
-export function getUserByUsername(username) {
-  return db.prepare('SELECT * FROM users WHERE username = ?').get(username);
-}
-
-export function authenticateUser(username, password) {
-  const user = getUserByUsername(username);
-  if (!user) {
-    return null;
-  }
-
-  const valid = bcrypt.compareSync(password, user.password_hash);
-  if (!valid) {
-    return null;
-  }
-
-  return { id: user.id, username: user.username, email: user.email };
-}
-
-export function updateUserPassword(id, newPassword) {
-  const passwordHash = bcrypt.hashSync(newPassword, 10);
-  return db.prepare('UPDATE users SET password_hash = ?, updated_at = datetime("now") WHERE id = ?').run(passwordHash, id);
-}
-
-export function deleteUser(id) {
-  return db.prepare('DELETE FROM users WHERE id = ?').run(id);
-}
-
-export function getAllUsers() {
-  return db.prepare('SELECT id, username, email, created_at FROM users ORDER BY created_at DESC').all();
-}
-
-// ============ SESSIONS TABLE ============
-
-// Add sessions table for token-based auth
-db.exec(`
-  CREATE TABLE IF NOT EXISTS sessions (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    token TEXT UNIQUE NOT NULL,
-    expires_at TEXT NOT NULL,
-    created_at TEXT DEFAULT (datetime('now')),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-  );
-  CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
-  CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
-`);
-
-export function createSession(userId) {
-  const id = crypto.randomUUID();
-  const token = crypto.randomUUID() + '-' + crypto.randomUUID();
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
-
-  db.prepare(`
-    INSERT INTO sessions (id, user_id, token, expires_at)
-    VALUES (?, ?, ?, ?)
-  `).run(id, userId, token, expiresAt);
-
-  return { token, expiresAt };
-}
-
-export function getSessionByToken(token) {
-  const session = db.prepare(`
-    SELECT s.*, u.username, u.email
-    FROM sessions s
-    JOIN users u ON u.id = s.user_id
-    WHERE s.token = ? AND s.expires_at > datetime('now')
-  `).get(token);
-
-  return session || null;
-}
-
-export function deleteSession(token) {
-  return db.prepare('DELETE FROM sessions WHERE token = ?').run(token);
-}
-
-export function deleteUserSessions(userId) {
-  return db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId);
-}
-
-export function cleanExpiredSessions() {
-  return db.prepare('DELETE FROM sessions WHERE expires_at <= datetime("now")').run();
 }
 
 // Export db for direct queries if needed

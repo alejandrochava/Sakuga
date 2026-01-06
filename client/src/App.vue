@@ -1,24 +1,14 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
-import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
+import { ref, watch } from 'vue';
+import { RouterLink, RouterView, useRoute } from 'vue-router';
 import ToastNotification from './components/ToastNotification.vue';
-import { useAuth } from './composables/useAuth';
 
 const route = useRoute();
-const router = useRouter();
-const { user, isAuthenticated, initAuth, logout } = useAuth();
 const isMobileMenuOpen = ref(false);
-const showUserMenu = ref(false);
-
-// Initialize auth on mount
-onMounted(() => {
-  initAuth();
-});
 
 // Close menu on route change
 watch(() => route.path, () => {
   isMobileMenuOpen.value = false;
-  showUserMenu.value = false;
 });
 
 const navItems = [
@@ -30,12 +20,6 @@ const navItems = [
   { path: '/settings', label: 'Settings' },
   { path: '/help', label: 'Help' }
 ];
-
-async function handleLogout() {
-  await logout();
-  showUserMenu.value = false;
-  router.push('/');
-}
 </script>
 
 <template>
@@ -54,7 +38,7 @@ async function handleLogout() {
         </RouterLink>
 
         <!-- Desktop Navigation -->
-        <nav class="hidden md:flex gap-2 items-center">
+        <nav class="hidden md:flex gap-2">
           <RouterLink
             v-for="item in navItems"
             :key="item.path"
@@ -63,51 +47,6 @@ async function handleLogout() {
           >
             {{ item.label }}
           </RouterLink>
-
-          <!-- User Menu -->
-          <div class="relative ml-2">
-            <button
-              v-if="isAuthenticated"
-              @click="showUserMenu = !showUserMenu"
-              class="flex items-center gap-2 px-3 py-2 rounded-neu-sm bg-neu-surface shadow-neu-raised-sm text-text-secondary hover:text-text-primary transition-all duration-200"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span class="text-sm font-medium">{{ user?.username }}</span>
-            </button>
-            <RouterLink
-              v-else
-              to="/login"
-              class="px-3 py-2 rounded-neu-sm bg-neu-surface shadow-neu-raised-sm text-text-secondary hover:text-accent transition-all duration-200 text-sm font-medium"
-            >
-              Sign In
-            </RouterLink>
-
-            <!-- Dropdown Backdrop -->
-            <div
-              v-if="showUserMenu"
-              @click="showUserMenu = false"
-              class="fixed inset-0 z-40"
-            />
-
-            <!-- Dropdown -->
-            <div
-              v-if="showUserMenu"
-              class="absolute right-0 mt-2 w-48 bg-neu-surface rounded-neu-sm shadow-neu-raised-lg z-50 py-2"
-            >
-              <div class="px-4 py-2 border-b border-neu-border/30">
-                <p class="text-sm font-medium text-text-primary">{{ user?.username }}</p>
-                <p v-if="user?.email" class="text-xs text-text-muted">{{ user?.email }}</p>
-              </div>
-              <button
-                @click="handleLogout"
-                class="w-full text-left px-4 py-2 text-sm text-text-secondary hover:bg-neu-elevated hover:text-text-primary transition-colors"
-              >
-                Sign Out
-              </button>
-            </div>
-          </div>
         </nav>
 
         <!-- Mobile Menu Button -->
@@ -152,29 +91,6 @@ async function handleLogout() {
               : 'text-text-secondary hover:bg-neu-elevated hover:text-text-primary'"
           >
             {{ item.label }}
-          </RouterLink>
-        </div>
-
-        <!-- Mobile Auth -->
-        <div class="mt-6 pt-6 border-t border-neu-border/30">
-          <div v-if="isAuthenticated" class="space-y-3">
-            <div class="px-4 py-2">
-              <p class="text-sm font-medium text-text-primary">{{ user?.username }}</p>
-              <p v-if="user?.email" class="text-xs text-text-muted">{{ user?.email }}</p>
-            </div>
-            <button
-              @click="handleLogout"
-              class="w-full px-4 py-3 rounded-neu-sm text-base font-medium text-text-secondary hover:bg-neu-elevated hover:text-text-primary transition-all duration-200"
-            >
-              Sign Out
-            </button>
-          </div>
-          <RouterLink
-            v-else
-            to="/login"
-            class="block px-4 py-3 rounded-neu-sm text-base font-medium text-accent hover:bg-neu-elevated transition-all duration-200"
-          >
-            Sign In
           </RouterLink>
         </div>
       </nav>
