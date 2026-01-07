@@ -1,3 +1,5 @@
+import logger from './logger.js';
+
 /**
  * Custom application error class
  */
@@ -49,7 +51,7 @@ export function errorHandler(err, req, res, next) {
 
   // Log error (except for operational/expected errors)
   if (!err.isOperational) {
-    console.error('Unexpected error:', err);
+    logger.error({ err, path: req.path, method: req.method }, 'Unexpected error');
   }
 
   // Send response
