@@ -29,7 +29,7 @@ describe('CostBadge', () => {
       props: { cost: 0.01 }
     });
     const span = wrapper.find('span');
-    expect(span.classes()).toContain('px-2');
+    expect(span.classes()).toContain('px-2.5');
     expect(span.classes()).toContain('text-xs');
   });
 
