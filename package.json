@@ -14,7 +14,14 @@
     "test:unit": "npm run test:run --prefix client",
     "test:e2e": "npx playwright test",
     "test:e2e:ui": "npx playwright test --ui",
-    "test": "npm run test:unit && npm run test:e2e"
+    "test": "npm run test:unit && npm run test:e2e",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.{js,ts,vue,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,ts,vue,json,md}\"",
+    "typecheck": "npm run typecheck --prefix client && npm run typecheck --prefix server",
+    "typecheck:client": "npm run typecheck --prefix client",
+    "typecheck:server": "npm run typecheck --prefix server"
   },
   "description": "Sakuga (作画) is a personal image generation tool I built to experiment with Google's Gemini image model. The name comes from the Japanese term for animation/drawing - felt fitting for an app that creates images.",
   "main": "index.js",
@@ -25,13 +32,22 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/alejandrochava/Sakuga/issues"
   },
   "homepage": "https://github.com/alejandrochava/Sakuga#readme",
   "devDependencies": {
-    "@playwright/test": "^1.57.0"
+    "@eslint/js": "^9.39.2",
+    "@playwright/test": "^1.57.0",
+    "@typescript-eslint/eslint-plugin": "^8.52.0",
+    "@typescript-eslint/parser": "^8.52.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^10.6.2",
+    "globals": "^17.0.0",
+    "prettier": "^3.7.4",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3"
