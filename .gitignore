@@ -2,6 +2,7 @@
 node_modules/
 
 # Environment
+.env
 server/.env
 .env.local
 .env.*.local
